@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+
+    <form class="card" action="{% url 'register' %} " method="POST">
+        {% csrf_token %}
+        <h1 class="head_1">{% if request.user %} Профиль пользователя {{ request.user.username }}{% else %}{{ page_name }} {% endif %}</h1>
+        {# form.as_p #}
+        {% for field in form %}
+        {% if field.name == 'social_list' %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {% for checkbox in field %}
+            <br>
+            <label>
+                {# checkbox.choice_label #}
+                <input type="text" name="social_link"
+                       value="" placeholder="{{ checkbox.choice_label }}">
+            </label>
+
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+        {% endif %}
+        {% endfor %}
+
+
+        {{ city_form.as_p }}
+        {{ address_form.as_p }}
+
+        {{ contacts_form.as_p }}
+
+
+        <!--        {{ portfolio_form.as_p }}-->
+
+        <!--        {{ team_form.as_p }}-->
+        <!--        {{ card_form.as_p }}-->
+        <button type="submit">Submit</button>
+    </form>
+</main>
+<!-- <script src="{% static '' %}{{ page_style }}/js/script.js"></script> -->
+{% endblock %}
+

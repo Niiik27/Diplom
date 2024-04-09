@@ -1,0 +1,33 @@
+body {
+    background-color: #beb09d;
+}
+
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: scroll;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 5px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+}
+
+.message .user {
+    font-weight: bold;
+}
+
+.message .time {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.input-container {
+    margin-top: 10px;
+}

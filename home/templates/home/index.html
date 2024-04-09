@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if request.user.username %}
+<a href="{% url 'portfolio' username=request.user.username %}" class="col-1 link link-primary">Портфолио</a>
+{% endif %}
+
+{% endblock %}
+

@@ -1,0 +1,15 @@
+NAME = 0
+VERBOSE = 1
+HOME = 'home', 'Главная'
+LOGIN = 'login', 'Вход'
+REGISTER = 'register', 'Регистрация'
+LOGOUT = 'logout', 'Выйти'
+EDIT = 'edit', 'Редактировать профиль'
+VIEW = 'view', 'Просмотр профиля'
+PROFILE = 'profile', 'Профиль'
+PORTFOLIO = 'portfolio', 'Портфолио'
+BLOG = 'blog', 'Блог'
+ACHEIVES = 'acheives', 'Наши работы'
+MESSAGE = 'message', 'Сообщения'
+NOTIFICATIONS = 'notifications', 'Уведомления'
+USERS = 'users', 'Пользователи'

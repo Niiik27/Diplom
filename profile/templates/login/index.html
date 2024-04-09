@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+    <main>
+
+        <section class="hero">
+            <a href="{% url 'register' %}">Зарегистрироваться</a>
+            <a href="#">Войти при помощи ВК</a>
+        </section>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Войти</button>
+</form>
+
+<p>Еще нет аккаунта? <a href="{% url 'register' %}">Зарегистрируйтесь</a></p>
+    </main>
+{% endblock %}
+
+
+

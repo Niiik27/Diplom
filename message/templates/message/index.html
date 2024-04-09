@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<main>
+    <div id="message-list"></div>
+    <div class="chat-container" id="chat-container">
+        <!-- Здесь будут отображаться сообщения -->
+    </div>
+    <textarea id="message-input" rows="3" placeholder="Введите ваше сообщение"></textarea>
+    <button onclick="sendMessage()">Отправить</button>
+    <script>
+
+      document.getElementById("message-input").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+        const historySocket = new WebSocket('ws://127.0.0.1:8002/ws/history/');
+
+        historySocket.onopen = function () {
+            console.log('HistorySocket connection established.');
+            requestHistory();
+        };
+        historySocket.onclose = function () {
+            console.log('HistorySocket connection closed.');
+        };
+
+
+        historySocket.onmessage = function (event) {
+            console.log('historySocket onmessage');
+            let data = JSON.parse(event.data);
+            // console.log(data);
+            addMessageToChat(data.sender_name, data.message);
+        };
+
+        function requestHistory() {
+            let receiver_name = "{{ recipient }}";
+            let receiver_id = "{{ receiver_id }}";
+            let sender_name = "{{ sender }}";
+            let sender_id = "{{ sender_id }}";
+
+
+            historySocket.send(JSON.stringify({
+                'channel_name': receiver_id,
+                'receiver_name': receiver_name,
+                'sender_name': sender_name,
+                'sender_id': sender_id
+            }));
+        }
+
+        const ws = new WebSocket('ws://127.0.0.1:8002/ws/chat/');
+
+        function sendMessage() {
+            let messageInput = document.getElementById('message-input');
+            let message = messageInput.value.trim();
+            let receiver_name = "{{ recipient }}";
+            let receiver_id = "{{ receiver_id }}";
+            let sender_name = "{{ sender }}";
+            let sender_id = "{{ sender_id }}";
+            // console.log("receiver_id:", receiver_id, "receiver_name:", receiver_name);
+            // console.log("sender_id:", sender_id, "sender_name:", sender_name);
+            // console.log("message:", message);
+            if (receiver_id && message !== '') {
+                ws.send(JSON.stringify({
+                    'type': 'chat_message',
+                    'message': message,
+                    'channel_name': receiver_id,
+                    'receiver_name': receiver_name,
+                    'sender_name': sender_name,
+                    'sender_id': sender_id
+                }));
+                messageInput.value = '';
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            let chatContainer = document.getElementById('chat-container');
+            let messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = '<span class="user">' + sender + '</span>: ' + message;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+
+        ws.onopen = function () {
+            console.log('WebSocket connection established.');
+        };
+
+
+        ws.onmessage = function (event) {
+            console.log('onmessage');
+            let data = JSON.parse(event.data);
+            // console.log(data);
+            addMessageToChat(data.sender_name, data.message);
+        };
+
+
+        ws.onclose = function () {
+            console.log('WebSocket connection closed.');
+        };
+    </script>
+</main>
+{% endblock %}

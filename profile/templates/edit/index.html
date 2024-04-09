@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+
+    <form class="card" action="{% url 'edit' username=request.user.username %}" method="POST">
+        {% csrf_token %}
+
+        <h1 class="head_1">{% if request.user %} Профиль {% if request.user.status.name == 'Заказчик' %}заказчика
+            {% else %}строителя{% endif %} {{ request.user.username }}{% else %}{{ page_name }} {% endif %}</h1>
+        <button type="submit">Submit</button>
+        {# form.as_p #}
+        {% for field in form %}
+        <!--        {{field.as_p}}-->
+        <!--        {% if field.name == 'social_list' %}-->
+        <div class="form-group">
+            <h2>Соцсети:</h2>
+            <ul>
+                {% for key,value in social_list.items %}
+                <li>
+                    <img src="{% static value.0 %}" alt=key width="50" height="50">
+                    <input type="text" name="social_link"
+                           value="{{ value.1 }}" placeholder="{{ key }}">
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+        <!--        {% else %}-->
+        <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+        <!--        {% endif %}-->
+        {% endfor %}
+
+
+        {{ city_form.as_p }}
+        {{ address_form.as_p }}
+        <h2>Телефон:</h2>
+        {{ contacts_form.phone }}
+
+
+        <h2>Мессенджеры:</h2>
+        <ul>
+            {% for messenger in contacts_form.messenger.field.queryset %}
+            <li>
+                <label>
+                    <input type="checkbox" name="messenger" value="{{ messenger.pk }}"
+                           {% if messenger.pk in contacts_form.messenger.value %}checked{% endif %}>
+                    <img src="{% static messenger.icon_path %}" alt=messenger.name width="50" height="50">
+                    {{ messenger.name }}
+                </label>
+            </li>
+            {% endfor %}
+        </ul>
+    </form>
+</main>
+<!-- <script src="{% static '' %}{{ page_style }}/js/script.js"></script> -->
+{% endblock %}
+
