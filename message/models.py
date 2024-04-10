@@ -10,12 +10,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender} -> {self.receiver}: {self.content}"
-
-# class Message(models.Model):
-#     sender_id = models.IntegerField(verbose_name="id Отправителя", null=True, blank=True)
-#     receiver_id = models.IntegerField(verbose_name="id Получателя", null=True, blank=True)
-#     content = models.TextField(verbose_name="Сообщение", null=True, blank=True)
-#     timestamp = models.DateTimeField(verbose_name="Дата и время", auto_now_add=True)
-#
-#     def __str__(self):
-#         return 'Сообщения всех пользователей'

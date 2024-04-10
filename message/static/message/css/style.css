@@ -1,7 +1,12 @@
 body {
     background-color: #beb09d;
 }
-
+.input-container {
+    margin-top: 10px;
+        position: fixed;
+    display: flex;
+    bottom: 0;
+}
 
 .chat-container {
     display: flex;
@@ -27,7 +32,48 @@ body {
     font-size: 0.8em;
     color: #888;
 }
-
-.input-container {
-    margin-top: 10px;
+.input{
+    display: flex;
+    width: 100%;
+    background-color: blueviolet;
+    /*flex-direction: column;*/
 }
+
+#message-input{
+    display: flex;
+    width: 100%;
+
+    /*flex-direction: column;*/
+}
+
+#btn-input{
+    display: block;
+    color: cornsilk;
+    background-color: var(--header-color);
+    width: 50px;
+    height:auto;
+    font-weight: bold;
+    font-size: 30px;
+
+}
+
+#btn-input:hover{
+    font-size: 35px;
+    color: #fdfaec;
+}
+
+#btn-input:active{
+    font-size: 35px;
+    color: rgba(64, 255, 0, 0.7);
+}
+
+.sender-message {
+    background-color: ivory;
+}
+
+.receiver-message {
+    background-color: var(--header-color);
+    color:seashell;
+}
+
+

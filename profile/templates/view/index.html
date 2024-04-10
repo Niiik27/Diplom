@@ -19,16 +19,15 @@
 
         <form id="new_img_form" class="hero new_edit_form"
               action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
-              enctype="multipart/form-data">
+              enctype="multipart/form-data" style="display: flex">
             {% csrf_token %}
             <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
 
             <button id="submitButton" class="button" type="submit" name="edit_btn" value="new_image">
                 Сообщения
             </button>
-
         </form>
-
+<!--        <a href="{% url 'message' recipient=profile_user.username username=username %}">Cообщения</a>-->
         {% if request.user.status.name != 'Заказчик' %}
         <a href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
         {% endif %}

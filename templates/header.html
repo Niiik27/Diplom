@@ -15,9 +15,8 @@
 
             <div class="menu">
                 {% if user.is_authenticated == False %}
-                <a href="{% url 'login' %}" class="h-75 btn btn-outline-dark  ms-2" type="button">Вход</a>
+                <a href="{% url 'login' %}" class="" type="button">Вход</a>
                 {% else %}
-<!--                <a href="{% url 'profile' username=request.user.username %}" class="" type="button">Профиль</a>-->
 
                 <a href="{% url 'users'  %}" class="" type="button">Пользователи</a>
                 <a href="{% url 'profile' 'logout' %}" class="" type="button">Выход</a>
