@@ -20,6 +20,9 @@
  Форма отправки имеет два скрытых поля - id картинки и режим отправки - редактирование,удаление, или новое
  сервер по ним понимает что нужно сделать
  */
+
+
+
 function getImgPath(path) {
     const pathParts = path.split('/');
     const filteredPathParts = pathParts.filter(part => part !== 'tmb');
@@ -241,7 +244,7 @@ const urlsField = textFields.namedItem('url');
 
 const submitBtn = document.getElementById("submitButton");
 
-let header = document.getElementById('portfolio_buttons');
+let header = document.getElementById('menu');
 const button = document.createElement('button');
 button.innerHTML = 'Добавить';
 header.appendChild(button);

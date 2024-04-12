@@ -1,57 +1,9 @@
 :root {
   --max-z-index: 1000;
 }
-
-* {
-    font-family: Arial, Helvetica, sans-serif
+body{
+    background-color: #363434;
 }
-
-ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-li {
-    margin: 0;
-    padding: 0;
-}
-
-*,
-::before,
-::after {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    /*background:#eaf166;*/
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
-    margin: 0;
-}
-
-label{
-    font-weight: bold;
-}
-
-.head_1 {
-    /* background-color: rgb(71, 92, 92,.4); */
-    background: linear-gradient(to top, rgba(0, 0, 0, .1), rgba(0, 0, 0, .5));
-    padding: 10px;
-    /* position: relative;
-    justify-content: center;
-    align-items: center; */
-}
-
 .new_edit_form{
     position: fixed;
     top: 50%;
@@ -71,9 +23,8 @@ label{
     border-radius: 60px;
     box-shadow: 3px 3px 10px grey;
     margin: auto;
-
-
 }
+
 .gallery{
     position: relative;
     /*bottom: 50%;*/
@@ -85,9 +36,9 @@ label{
     /*justify-content: space-between;*/
     align-items: center;
     width: 100%;
-    height: calc(100% - 100px);
-    background-color: #363434;
-    padding:20px;
+    height: 100%;
+    /*background-color: #363434;*/
+    /*padding:20px;*/
     /*border-width: 2px;*/
     /*border-color: #333131;*/
     /*border-style: solid;*/
@@ -97,8 +48,6 @@ label{
 
 
 }
-
-
 
 .inputs{
     background-color: #333333;
@@ -120,7 +69,7 @@ label{
     height: 100%;
 }
 .area-container{
-    background-color: #414141;
+    /*background-color: #414141;*/
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -189,7 +138,7 @@ label{
     border-style: solid;
     border-radius: 15px;
     box-shadow: 3px 3px 10px grey;
-    position:absolute;
+    position:fixed;
 
 
     /*background-image: url('http://127.0.0.1:8001/media/portfolio/user_Niiik27_1/1.jpg');*/
@@ -235,8 +184,8 @@ label{
     color:white;
     font-weight: bold;
     /*top: 75%;*/
-    bottom: 0px;
-    left: 0px;
+    bottom: 0;
+    left: 0;
     width: calc(100% - 00px);
     /*border-radius: 15px 15px;*/
     border-bottom-left-radius: 15px;
@@ -251,26 +200,13 @@ label{
 
 
 .thumbs{
-
-    /*display: grid;*/
-    /*grid-gap: 50px;*/
-    /*grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));*/
-    /*grid-auto-rows: 200px;*/
-    /*grid-auto-flow: dense;*/
-    /*grid-column: span 2;*/
-    /*grid-row: span 2;*/
-
-
-
     display: flex;
     float: left;
     flex-wrap: wrap;
     max-width:100%;
-    height: 640px;
+    width:100%;
+    height: calc(100vh - var(--header-height) * 3);
     overflow-y: scroll;
-
-
-
 }
 
 
@@ -333,12 +269,12 @@ label{
     display: flex;
     bottom: 3em;
     justify-content: center;
-    left: 5px;
+    left: 10px;
 
     transition: opacity  .4s,scale .4s ease-in ;
     /*margin: 10px;*/
     padding:10px;
-    width: calc(100% - 15px);
+    width: calc(100% - 20px);
     background:linear-gradient(transparent -5%, black);
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;

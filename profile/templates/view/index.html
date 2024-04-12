@@ -2,12 +2,41 @@
 {% block content %}
 {% load static %}
 <main>
-    <h1 class="head_1">{% if profile_user %} {{ request.profile_user.status }} {{ profile_user.first_name }}
-        {{ profile_user.last_name }}{% endif %}</h1>
-    <p>{% if request.user.status.name != 'Заказчик' %}Дата рождения: {% else %}Выполнить до: {{ profile_user.birth }}
-        {% endif %} Почта: {{ profile_user.email }} Телефон: {{ profile_user.user_contacts.phone }}</p>
+    <h1 class="head_1">
+        {% if profile_user %}
+        {% if request.profile_user.status %}
+        {{ request.profile_user.status }}
+        {% endif %}
+        {% if profile_user.first_name %}
+        {{ profile_user.first_name }}
+        {% endif %}
+        {% if profile_user.last_name %}
+        {{ profile_user.last_name }}
+        {% endif %}
+        {% endif %}
+    </h1>
+    <p>
+        {% if profile_user.birth %}
+        {% if request.user.status.name != 'Заказчик' %}
+        Дата рождения:
+        {% else %}
+        Выполнить до:
+        {% endif %}
+        {{ profile_user.birth }}
+        {% endif %}
+
+        {% if profile_user.email %}
+        Почта: {{ profile_user.email }}
+        {% endif %}
+
+        {% if profile_user.user_contacts.phone %}
+        Телефон: {{ profile_user.user_contacts.phone }}
+        {% endif %}
+    </p>
     <div>
-        <h2>Мессенджеры:</h2>
+        {% if profile_user.user_contacts.phone %}
+        {% if profile_user.user_contacts.messenger.all %}
+        <h2>{{ profile_user.user_contacts.phone }}:</h2>
         <ul>
             {% for messenger in profile_user.user_contacts.messenger.all %}
             <li>
@@ -16,7 +45,8 @@
             </li>
             {% endfor %}
         </ul>
-
+        {% endif %}
+        {% endif %}
         <form id="new_img_form" class="hero new_edit_form"
               action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
               enctype="multipart/form-data" style="display: flex">
@@ -27,11 +57,14 @@
                 Сообщения
             </button>
         </form>
-<!--        <a href="{% url 'message' recipient=profile_user.username username=username %}">Cообщения</a>-->
         {% if request.user.status.name != 'Заказчик' %}
         <a href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
         {% endif %}
     </div>
+    {%
+    if profile_user.address.city or profile_user.address.district or profile_user.address.street or
+    profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code
+    %}
     <h2>Адрес:</h2>
     <ul>
         {% if profile_user.address.city %}
@@ -53,28 +86,33 @@
         <li>Индекс: {{ profile_user.address.postal_code }}</li>
         {% endif %}
     </ul>
-
-
+    {% endif %}
+    {% if profile_user.qualify %}
     <h2>{% if request.user.status.name != 'Заказчик' %}Квалификация: {% else %}Оплата:{% endif %}</h2>
     <p>{{ profile_user.qualify }}</p>
+    {% endif %}
+    {% if profile_user.about %}
     <h2> {% if request.user.status.name != 'Заказчик' %}О себе: {% else %}Требуется:{% endif %}</h2>
     <p>{{ profile_user.about }}</p>
+    {% endif %}
     {% if request.user.status.name != 'Заказчик' %}
+    {% if specialization %}
     <h2>Специализации:</h2>
     <ul>
         {% for specialization in profile_user.specialisation.all %}
         <li>{{ specialization }}</li>
         {% endfor %}
     </ul>
-
+    {% endif %}
+    {% if allowance %}
     <h2>Разрешения:</h2>
     <ul>
         {% for allowance in profile_user.allow.all %}
         <li>{{ allowance }}</li>
         {% endfor %}
     </ul>
-
-
+    {% endif %}
+    {% if social_list.items %}
     <h2>Соцсети:</h2>
     <ul>
         {% for key,value in social_list.items %}
@@ -85,15 +123,17 @@
         </li>
         {% endfor %}
     </ul>
-
+    {% endif %}
+    {% if profile_user.fine.all %}
     <h2>Замечания:</h2>
     <ul>
         {% for fine in profile_user.fine.all %}
         <li>{{ fine.fine }}</li>
         {% endfor %}
     </ul>
+    {% endif %}
 </main>
 {% endif %}
-<!-- <script src="{% static '' %}{{ page_style }}/js/script.js"></script> -->
+ <script src="{% static '' %}{{ page_style }}/js/script.js"></script>
 {% endblock %}
 

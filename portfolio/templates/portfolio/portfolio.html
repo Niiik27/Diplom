@@ -3,9 +3,7 @@
 {% block content %}
 {% load static %}
 <main>
-    {{ portfolio }}
     {% if portfolio %}
-     {{ portfolio }}
     <section class="wrapper gallery">
         <div id="img_view" style="display: none">
             <!--            Это основная картинка с описанием-->
@@ -63,10 +61,6 @@
                 </div>
             </form>
         </section>
-
-
-
     <script src="{% static '' %}{{ page_style }}/js/gallery.js"></script>
-
 </main>
 {% endblock %}

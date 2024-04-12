@@ -94,9 +94,16 @@ class UserCreateView(CreateView):
             user = authenticate(username=new_user.username, password=request.POST['password1'])
             if user is not None:
                 login(request, user)
+                if user.status == Status.objects.last():
+                    pass
+                # если регится заказчик то прорабы должны об этом узнать
+                # а если кто то стал прорабом то об этом должны узнать свободные строители, чтобы они могли наняться
+                # проблема в том что заказ должны видеть прорабы, а стать прорабом можно только при наличии заказаа
+                # Возможжно заказы будут видеть опытные строители, а отклик на заказ будет делать их прорабами
+                # Прорабство будет означать занятость и невозможность откликнуться на другие закакзы.
+                # Но оно позволит вести блог и зарабатывать рейтинг и нанимать сотрудников
+                # До реализации этого очень далеко
                 return redirect(reverse(f'{APP_NAMES.PROFILE[APP_NAMES.NAME]}', kwargs={'username': user.username}))
-
-                # return HttpResponseRedirect(success_url)
             else:
                 return HttpResponseRedirect(request.get_full_path())
         else:

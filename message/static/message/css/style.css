@@ -1,9 +1,10 @@
 body {
-    background-color: #beb09d;
+    background-color: #363434;
 }
+
 .input-container {
     margin-top: 10px;
-        position: fixed;
+    position: fixed;
     display: flex;
     bottom: 0;
 }
@@ -32,37 +33,38 @@ body {
     font-size: 0.8em;
     color: #888;
 }
-.input{
+
+.input {
     display: flex;
     width: 100%;
     background-color: blueviolet;
     /*flex-direction: column;*/
 }
 
-#message-input{
+#message-input {
     display: flex;
     width: 100%;
 
     /*flex-direction: column;*/
 }
 
-#btn-input{
+#btn-input {
     display: block;
     color: cornsilk;
     background-color: var(--header-color);
     width: 50px;
-    height:auto;
+    height: auto;
     font-weight: bold;
     font-size: 30px;
 
 }
 
-#btn-input:hover{
+#btn-input:hover {
     font-size: 35px;
     color: #fdfaec;
 }
 
-#btn-input:active{
+#btn-input:active {
     font-size: 35px;
     color: rgba(64, 255, 0, 0.7);
 }
@@ -73,7 +75,10 @@ body {
 
 .receiver-message {
     background-color: var(--header-color);
-    color:seashell;
+    color: seashell;
 }
 
-
+#message-input {
+    background-color: var(--header-color);
+    color: seashell;
+}

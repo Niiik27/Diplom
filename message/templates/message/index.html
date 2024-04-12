@@ -8,17 +8,31 @@
         <!-- Здесь будут отображаться сообщения -->
     </div>
     <div class="input">
-    <textarea id="message-input" rows="3" placeholder="Введите ваше сообщение"></textarea>
-    <button id="btn-input" class="arrow-button"  onclick="sendMessage()"> &#9654; </button>
+        <textarea id="message-input" rows="3" placeholder="Введите ваше сообщение"></textarea>
+        <button id="btn-input" class="arrow-button" onclick="sendMessage()"> &#9654;</button>
     </div>
     <script>
+        let window_opened = true;
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === 'visible') {
 
-      document.getElementById("message-input").addEventListener("keyup", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            sendMessage();
+                window_opened = true;
+            } else {
+
+                window_opened = false;
+            }
+        });
+        if (window_opened) {
+            console.log('Вкладка активна');
+        } else {
+            console.log('Вкладка неактивна');
         }
-    });
+        document.getElementById("message-input").addEventListener("keyup", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
 
         const historySocket = new WebSocket('ws://127.0.0.1:8002/ws/history/');
 
@@ -34,7 +48,7 @@
         historySocket.onmessage = function (event) {
             console.log('historySocket onmessage');
             let data = JSON.parse(event.data);
-            addMessageToChat(data.sender_name, data.message, data.type);
+            addMessageToChat(data.sender_name, data.message, data.type, data.status);
         };
 
         function requestHistory() {
@@ -52,9 +66,10 @@
             }));
         }
 
-        const ws = new WebSocket('ws://127.0.0.1:8002/ws/chat/');
+        const chatSocket = new WebSocket('ws://127.0.0.1:8002/ws/chat/');
         let sender_name = "{{ sender }}";
         let receiver_name = "{{ recipient }}";
+
         function sendMessage() {
             let messageInput = document.getElementById('message-input');
             let message = messageInput.value.trim();
@@ -66,7 +81,7 @@
             // console.log("sender_id:", sender_id, "sender_name:", sender_name);
             // console.log("message:", message);
             if (receiver_id && message !== '') {
-                ws.send(JSON.stringify({
+                chatSocket.send(JSON.stringify({
                     'type': 'chat_message',
                     'message': message,
                     'channel_name': receiver_id,
@@ -78,36 +93,125 @@
             }
         }
 
-        function addMessageToChat(sender, message,type) {
-            let chatContainer = document.getElementById('chat-container');
-            let messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            console.log(type)
-            if (type === 'from_me') {
-                messageElement.classList.add('sender-message');
-            } else {
-                messageElement.classList.add('receiver-message');
-            }
-            messageElement.innerHTML = '<span class="user">' + sender + '</span>: ' + message;
-            chatContainer.appendChild(messageElement);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        let visibilityCheckTimeout = setTimeout(checkVisibility, 1000);
+        let chatContainer = document.getElementById('chat-container');
+
+
+        function isVisible(element) {
+            let rect = element.getBoundingClientRect();
+            let containerRect = chatContainer.getBoundingClientRect();
+
+            return (
+                rect.top >= containerRect.top &&
+                rect.bottom <= containerRect.bottom
+            );
         }
 
 
-        ws.onopen = function () {
+        function getUnreadVisibleMessageIds() {
+            const unreadVisibleMessageIds = [];
+            let messages = document.querySelectorAll('.message');
+            messages.forEach(function (message) {
+                // Проверяем, виден ли элемент и его data-read равно false
+                if (isVisible(message) && message.getAttribute('data-read') === 'false') {
+                    unreadVisibleMessageIds.push(message.getAttribute('id'));
+                }
+            });
+
+            return JSON.stringify({'type': 'read_report', 'read_ids': unreadVisibleMessageIds});
+        }
+
+        function checkVisibility() {
+            let report = getUnreadVisibleMessageIds();
+            console.log("проверили видимость", report);
+
+            if (report) {
+                notifySocket.send(report);
+            }
+
+        }
+
+        function setStatuses(read_ids) {
+            console.log("Получилось передать в другое место");
+            read_ids.forEach(function (id) {
+                let message = document.getElementById(id);
+                if (message) {
+                    message.setAttribute('data-read', 'true');
+                    message.style.fontWeight = 'normal';
+                }
+            });
+        }
+
+        chatContainer.addEventListener('scroll', function () {
+            console.log("Крутим колесико")
+            clearTimeout(visibilityCheckTimeout);
+            visibilityCheckTimeout = setTimeout(checkVisibility, 1000);
+        });
+
+
+        function sendReadReport() {
+            let messageInput = document.getElementById('message-input');
+            let message = messageInput.value.trim();
+
+            let receiver_id = "{{ receiver_id }}";
+
+            let sender_id = "{{ sender_id }}";
+            // console.log("receiver_id:", receiver_id, "receiver_name:", receiver_name);
+            // console.log("sender_id:", sender_id, "sender_name:", sender_name);
+            // console.log("message:", message);
+            if (receiver_id && message !== '') {
+                chatSocket.send(JSON.stringify({
+                    'type': 'chat_message',
+                    'message': message,
+                    'channel_name': receiver_id,
+                    'receiver_name': receiver_name,
+                    'sender_name': sender_name,
+                    'sender_id': sender_id
+                }));
+                messageInput.value = '';
+            }
+        }
+
+        function addMessageToChat(sender, message, type, status, id) {
+
+            let messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+
+            console.log(type)
+            if (type === 'from_me') {
+
+                messageElement.classList.add('sender-message');
+
+            } else {
+                messageElement.classList.add('receiver-message');
+                const stringStatus = `${status}`;
+                const stringId = `${id}`;
+                messageElement.setAttribute('data-read', stringStatus);
+                messageElement.setAttribute('id', stringId);
+            }
+            messageElement.innerHTML = '<span class="user">' + sender + '</span>: ' + message;
+            messageElement.style.fontWeight = status === 'false' ? 'bold' : 'normal';
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            clearTimeout(visibilityCheckTimeout);
+            visibilityCheckTimeout = setTimeout(checkVisibility, 1000);
+        }
+
+
+        chatSocket.onopen = function () {
             console.log('WebSocket connection established.');
         };
 
 
-        ws.onmessage = function (event) {
+        chatSocket.onmessage = function (event) {
             console.log('onmessage');
             let data = JSON.parse(event.data);
             console.log(data.message);
-            addMessageToChat(data.sender_name, data.message, data.type);
+            addMessageToChat(data.sender_name, data.message, data.type, data.status, data.id);
         };
 
 
-        ws.onclose = function () {
+        chatSocket.onclose = function () {
             console.log('WebSocket connection closed.');
         };
     </script>
