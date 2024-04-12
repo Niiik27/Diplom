@@ -14,8 +14,10 @@
     <script>
         let window_opened = true;
         document.addEventListener("visibilitychange", function () {
+            clearTimeout(visibilityCheckTimeout);
             if (document.visibilityState === 'visible') {
 
+                visibilityCheckTimeout = setTimeout(checkVisibility, 1000);
                 window_opened = true;
             } else {
 
@@ -48,7 +50,8 @@
         historySocket.onmessage = function (event) {
             console.log('historySocket onmessage');
             let data = JSON.parse(event.data);
-            addMessageToChat(data.sender_name, data.message, data.type, data.status);
+            console.log(data);
+            addMessageToChat(data.sender_name, data.message, data.type, data.status, data.id);
         };
 
         function requestHistory() {
@@ -113,7 +116,7 @@
             let messages = document.querySelectorAll('.message');
             messages.forEach(function (message) {
                 // Проверяем, виден ли элемент и его data-read равно false
-                if (isVisible(message) && message.getAttribute('data-read') === 'false') {
+                if (isVisible(message) && message.getAttribute('data-read') === 'false' && message.classList.contains('receiver-message')) {
                     unreadVisibleMessageIds.push(message.getAttribute('id'));
                 }
             });

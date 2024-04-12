@@ -71,11 +71,16 @@ body {
 
 .sender-message {
     background-color: ivory;
+    color: black;
 }
 
 .receiver-message {
     background-color: var(--header-color);
     color: seashell;
+}
+
+.sender-message span{
+    color: black;
 }
 
 #message-input {

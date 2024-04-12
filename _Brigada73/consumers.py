@@ -50,7 +50,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender = await self.get_user_by_id(sender_id)
         receiver = await self.get_user_by_id(receiver_id)
         message_id = await self.save_message(sender, receiver, content)
-
+        if sender_name != receiver_name:
+            await self.send(text_data=json.dumps({
+                'type': 'from_me',
+                'status': 'true',
+                'id': -1,
+                'message': content,
+                'sender_name': sender_name,
+                'receiver_name': receiver_name,
+            }))
         print("В чате:", chat_users)
         if channel_name in chat_users:
             print("Пользователь в чате")
@@ -126,15 +134,14 @@ class HistoryConsumer(AsyncWebsocketConsumer):
             (Q(sender=sender) & Q(receiver=receiver)) | (Q(sender=receiver) & Q(receiver=sender))).order_by('timestamp')
         messages_data = []
         for message in messages:
-            message_data = {
+            messages_data.append({
                 'type': 'to_me',
                 'content': message.content,
                 'status': message.status,
                 'id': message.id,
                 'sender_name': message.sender.username,
                 'receiver_name': message.receiver.username,
-            }
-            messages_data.append(message_data)
+            })
         return messages_data
 
     # @sync_to_async
@@ -143,7 +150,7 @@ class HistoryConsumer(AsyncWebsocketConsumer):
             'type': 'to_me',
             'status': 'true',
             'id': -1,
-            'message': "Доброо пожаловать в чат",
+            'message': "Добро пожаловать в чат",
             'sender_name': "Историк",
             'receiver_name': self.scope['user'].username,
         }))
@@ -151,8 +158,8 @@ class HistoryConsumer(AsyncWebsocketConsumer):
             for message in messages:
                 # await self.send_message(message['sender_name'], message['receiver_name'], message['content'])
                 await self.send(text_data=json.dumps({
-                    'type': 'from_me' if message['sender_name'] == self.scope['user'] else 'to_me',
-                    'status': message['status'],
+                    'type': 'from_me' if message['sender_name'] == self.scope['user'].username else 'to_me',
+                    'status': bool(message['status']),
                     'id': message['id'],
                     'message': message['content'],
                     'sender_name': message['sender_name'],
@@ -218,19 +225,19 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def set_status(self, read_ids):
         print('Обновление id',read_ids)
-        read_ids_int = list(map(int, read_ids))
+        # read_ids_int = list(map(int, read_ids))
         try:
             message_model = apps.get_model(app_label='message', model_name='Message')
-            # message_model.objects.filter(id__in=read_ids_int).update(status=True)
-            for message_id in read_ids:
-                message = message_model.objects.get(id=message_id)
-                message.status = True
-                message.save()
-            print('Обновление id получилось', read_ids_int)
+            message_model.objects.filter(id__in=read_ids).update(status=True)
+            # for message_id in read_ids:
+            #     message = message_model.objects.get(id=message_id)
+            #     message.status = True
+            #     message.save()
+            # print('Обновление id получилось', read_ids_int)
             return True
         except Exception as e:
             print(f"An error occurred: {e}")
-            print('Обновление id не получилось', read_ids_int)
+            # print('Обновление id не получилось', read_ids_int)
             return False
 
     # @database_sync_to_async
