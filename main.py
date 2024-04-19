@@ -44,6 +44,7 @@ def remigrate():
     # print(f"Адрес админки: http://127.0.0.1:{port}/admin/")
     print('Запускается ws сервер')
     subprocess.Popen(["daphne", f"{project_name}.asgi:application", "-b", "0.0.0.0", "-p", str(int(port)+1)])
+
     print(f'ws сервер запущен на порте {str(int(port)+1)}')
     print(f'Запускается сервер Django на порте {port}')
     print(f"Адрес админки: http://127.0.0.1:{port}/admin/")

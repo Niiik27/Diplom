@@ -1,4 +1,7 @@
-
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+}
 
 
 .head_1 {
@@ -18,7 +21,7 @@
     align-items: center;
     width: 900px;
     /*height: 700px;*/
-    background-color: #939393;
+    background-color: #d3cfcf;
     border-width: 2px;
     border-color: #c4c4c4;
     border-style: solid;

@@ -2,13 +2,23 @@
     {% load static %}
     <div class="container">
 
-        <div class="avatar ">
+        <div class="avatar">
             {% if user.is_authenticated == False %}
             <a href="{% url 'home' %}" class="username">Главная</a>
             {% else %}
-            <a href="{% url 'profile' username=request.user.username %}" class="username">{{ request.user.username
-                }} </a>
-            <a href="{% url 'profile' username=request.user.username %}edit" class="" type="button">Редактировать</a>
+            <a href="{% url 'profile' username=user.username %}" class="username">
+                {{ request.user.username }} </a>
+            {% if page_style == 'edit' %}
+            <a id="saveLink" href="#" class="" type="button">Сохранить</a>
+            {% else %}
+            <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>
+            {% endif %}
+            {% if request.user.status.name != 'Заказчик' %}
+            <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>
+            {% endif %}
+            {% if request.user.status.name == 'Мастер' %}
+            <a href="{% url 'users'  %}">Заказы <span id="orders-total">0</span></a>
+            {% endif %}
             {% endif %}
         </div>
 
@@ -43,15 +53,13 @@
         notifySocket.onmessage = function (event) {
             console.log('notifySocket onmessage');
             let data = JSON.parse(event.data);
-            if(data.type==='set_statuses'){
-                console.log("incomingNotify",data);
-                console.log("incomingNotify",data.statuses);
+            if (data.type === 'set_statuses') {
+                console.log("incomingNotify", data);
+                console.log("incomingNotify", data.statuses);
                 setStatuses(data.statuses);
-            }
-            else if(data.type==='total')
-            {
+            } else if (data.type === 'total') {
                 addUnreadNum(data.num);
-                console.log('Пришло уведомление о количестве сообщений',data.num,data.type);
+                console.log('Пришло уведомление о количестве сообщений', data.num, data.type);
             }
 
         };

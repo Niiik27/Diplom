@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
+import re
 from pathlib import Path
 
 
@@ -47,7 +48,10 @@ INSTALLED_APPS = [
     APP_NAMES.PROFILE[APP_NAMES.NAME],
     APP_NAMES.PORTFOLIO[APP_NAMES.NAME],
     APP_NAMES.MESSAGE[APP_NAMES.NAME],
+    # 'rest_framework_simplejwt',
+
     'channels',
+    'channels_redis',
 ]
 
 CHANNEL_LAYERS = {
@@ -55,11 +59,23 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',  # Используйте InMemoryChannelLayer для тестов
         # 'BACKEND': 'channels_redis.core.RedisChannelLayer',  # для использования Redis
         # 'CONFIG': {
-        #     'hosts': [('127.0.0.1', 6379)],
+        #     'hosts': [('127.0.0.1', 6379)],#6379
+        #     "channel_capacity": {
+        #         "http.request": 200,
+        #         "http.response!*": 10,
+        #         re.compile(r"^websocket.send\!.+"): 20,
+        #     },
+        #     # "on_disconnect": "redis.disconnect",
+        #     "symmetric_encryption_keys": [SECRET_KEY],
         # },
     },
 }
 
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+# }
 
 
 MIDDLEWARE = [

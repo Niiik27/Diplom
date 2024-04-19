@@ -1,4 +1,10 @@
+import asyncio
 import json
+import time
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.contrib.sessions.models import Session
 
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -8,8 +14,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView
+from _Brigada73.consumers import get_order_channel_name, OrderConsumer
 
-import APP_NAMES
+from _Brigada73.consumers import OrderConsumer
+from _Brigada73.socket_client import SOCKET
 from .forms import *
 from .models import CustomUser
 
@@ -31,7 +39,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
         context['user'] = user
         user_social_profiles = UserSocial.objects.filter(user=self.request.user)
         social_list = SocialList.objects.all()
-        print(context)
         if user.status_id != len(Status.objects.all()):
             context['role'] = 'builder'
             sl_res = {}
@@ -48,9 +55,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
             context['social_list'] = sl_res
         else:
             context['role'] = 'customer'
-
-
-
 
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
@@ -78,8 +82,6 @@ class UserCreateView(CreateView):
     form_class = CustomUserForm
     template_name = f'{APP_NAMES.REGISTER[APP_NAMES.NAME]}/index.html'
 
-
-
     def get(self, request, *args, **kwargs):
         context = {}
         context['form'] = self.get_form()
@@ -94,15 +96,10 @@ class UserCreateView(CreateView):
             user = authenticate(username=new_user.username, password=request.POST['password1'])
             if user is not None:
                 login(request, user)
-                if user.status == Status.objects.last():
-                    pass
-                # если регится заказчик то прорабы должны об этом узнать
-                # а если кто то стал прорабом то об этом должны узнать свободные строители, чтобы они могли наняться
-                # проблема в том что заказ должны видеть прорабы, а стать прорабом можно только при наличии заказаа
-                # Возможжно заказы будут видеть опытные строители, а отклик на заказ будет делать их прорабами
-                # Прорабство будет означать занятость и невозможность откликнуться на другие закакзы.
-                # Но оно позволит вести блог и зарабатывать рейтинг и нанимать сотрудников
-                # До реализации этого очень далеко
+
+                if user.status.name == 'Заказчик':
+                    Order.objects.create(customer=user)
+
                 return redirect(reverse(f'{APP_NAMES.PROFILE[APP_NAMES.NAME]}', kwargs={'username': user.username}))
             else:
                 return HttpResponseRedirect(request.get_full_path())
@@ -118,8 +115,6 @@ class UserUpdateView(UpdateView):
     form_class = EditUserForm
     template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/index.html'
 
-    # success_url = reverse_lazy(APP_NAMES.HOME[APP_NAMES.NAME])
-    # success_url = reverse_lazy('profile', kwargs={'username': form_class.fields['username']})
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
@@ -149,14 +144,8 @@ class UserUpdateView(UpdateView):
                     if profile.social_id == i + 1:
                         sl_res[social_name] = social_ico, profile.link
                         break
-        print("sl_res", social_list)
         context['social_list'] = sl_res
         context['fine_form'] = FineForm()
-        context['status_form'] = StatusForm()
-        context['portfolio_form'] = PortfolioForm()
-        context['notifications_form'] = NotificationsForm()
-        context['team_form'] = TeamForm()
-        context['card_form'] = CardForm()
         context['contacts_form'] = ContactsForm(instance=user.user_contacts)
         context['page_style'] = APP_NAMES.EDIT[APP_NAMES.NAME]
 
@@ -164,12 +153,12 @@ class UserUpdateView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         user_id = self.request.user.pk
+        # print("self.request", dir(self.request))
         user = get_object_or_404(CustomUser, pk=user_id)
         # if request.POST:
         # password1 = request.POST['password1']
         # password2 = request.POST['password2']
         # if password1 == password2:
-        #     print(password1, password2)
         username = request.POST['username']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
@@ -211,6 +200,18 @@ class UserUpdateView(UpdateView):
         user.allow.add(*allow)
         user.social_list.add(*social_indexes)
         user.save()
+        # print("META", self.request.META)
+        # print("COOKIES", self.request.COOKIES)
+        token = self.request.COOKIES.get('csrftoken')
+        sessionid = self.request.COOKIES.get('sessionid')
+
+        if user.status.name == 'Заказчик':
+            ws = SOCKET(token, sessionid, user)
+            ws.connect()
+            # ws.send_notify("Your message here")
+
+
+
         contact_user = Contacts.objects.get(user=user)
         contact_user.phone = phone
         contact_user.save()
@@ -247,12 +248,7 @@ class UserUpdateView(UpdateView):
         if postal_code:
             address_user.postal_code = postal_code
         address_user.save()
-        # print(type(self.form_class))
-        # print(dir(self.form_class))
-        # print(self.form_class.changed_data.get_context)
-        # return redirect(self.success_url)
-        # return redirect(
-        #     reverse_lazy(APP_NAMES.HOME[APP_NAMES.NAME], kwargs={'username': self.request.user.username}))
+
         return redirect(self.get_success_url())
 
         # else:
@@ -276,6 +272,16 @@ class UserUpdateView(UpdateView):
             return base_name in social_dict['domain_names'] and domain in social_dict['domains']
 
             # return(base_name==templates[0] and domain==templates[1])
+
+    def get_total_orders(self, me):
+        new_orders = Order.objects.filter(confirmed=False)
+        customer_ids = []
+        for order in new_orders:
+            customer = order.customer
+            if customer.address.city == me.address.city:
+                customer_ids.append(customer)
+        num_orders = len(customer_ids)
+        return num_orders
 
 
 class CustomUserListView(ListView):

@@ -56,11 +56,11 @@ class FineInline(StackedInline):
     fields = 'fine',
 
 
-class CardInline(StackedInline):
-    model = Card
-    extra = 0
-    # max_num = 5
-    fields = 'number', 'date', 'cvs'
+# class CardInline(StackedInline):
+#     model = Card
+#     extra = 0
+#     # max_num = 5
+#     fields = 'number', 'date', 'cvs'
 
 
 class ContactsInline(TabularInline):
@@ -70,26 +70,26 @@ class ContactsInline(TabularInline):
     fields = 'phone', 'messenger',
 
 
-class NotificationsInline(StackedInline):
-    model = Notifications
-    extra = 0
-    # max_num = 1
-    fields = 'notification', 'new',
-
-
-class PortfolioInline(StackedInline):
-    model = Portfolio
-    extra = 0
-    # max_num = 1
-    fields = 'portfolio',
+# class NotificationsInline(StackedInline):
+#     model = Notifications
+#     extra = 0
+#     # max_num = 1
+#     fields = 'notification', 'new',
+#
+#
+# class PortfolioInline(StackedInline):
+#     model = Portfolio
+#     extra = 0
+#     # max_num = 1
+#     fields = 'portfolio',
 
 
 @admin.register(CustomUser, site=admin.site)
 class CustomUserAdmin(admin.ModelAdmin):
     # list_display = ('username', 'first_name', 'last_name', 'birth','status',)
     # search_fields = ('username', 'first_name', 'last_name', 'birth','status',)
-    inlines = [CardInline, AddressInline, ContactsInline, UserSocialInline,
-               FineInline, NotificationsInline, PortfolioInline]
+    inlines = [AddressInline, ContactsInline, UserSocialInline,
+               FineInline,]# CardInline, NotificationsInline, PortfolioInline]
     fieldsets = (
         ('Основное', {'fields': ('username',)}),
         ('Персональная информация',
@@ -191,10 +191,18 @@ def create_external_lists(sender, **kwargs):
         City.objects.get_or_create(name='Москва')
         City.objects.get_or_create(name='Питер')
 
-        Status.objects.get_or_create(name='Новичок')
-        Status.objects.get_or_create(name='Строитель')
-        Status.objects.get_or_create(name='Прораб')
-        Status.objects.get_or_create(name='Заказчик')
+        # Эти статусы нужны для получения работы может быть любое количчеств. можно вообщен указать цену за квадрат
+        Status.objects.get_or_create(name='Новичок')#Ни чего нет
+        Status.objects.get_or_create(name='Специалист')#Есть опыт
+        Status.objects.get_or_create(name='Профессионал')#Есть инструменты
+
+        # Промежуточный статус.
+        # Пока что это самое простое ршеение - переместить все функциональные статусы в конец списка.
+        # Мастером можно стать добровольно как и любым другим статусом до, но нужно понимать ответственность
+        Status.objects.get_or_create(name='Мастер')# Профессионал, но получает уведомления о заказах
+        # Это скрытые статусы. но они инициируют всю работу
+        Status.objects.get_or_create(name='Прораб')#Мастер становится прорабом когда берет заказ
+        Status.objects.get_or_create(name='Заказчик')# Когда регится заказчик рассылаются уведомления
 
         Qualify.objects.get_or_create(name='Дешево')
         Qualify.objects.get_or_create(name='Средне')
@@ -223,6 +231,6 @@ def create_additional_models(sender, instance, created, **kwargs):
     if created:
         Address.objects.create(user=instance)
         Contacts.objects.create(user=instance)
-        Card.objects.create(user=instance)
+        # Card.objects.create(user=instance)
 
         # initial_message = Message.objects.create(sender_id=instance, receiver_id=instance, content="Welcome to our platform!")

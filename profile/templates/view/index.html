@@ -4,8 +4,8 @@
 <main>
     <h1 class="head_1">
         {% if profile_user %}
-        {% if request.profile_user.status %}
-        {{ request.profile_user.status }}
+        {% if profile_user.status %}
+        {{ profile_user.status }}
         {% endif %}
         {% if profile_user.first_name %}
         {{ profile_user.first_name }}
@@ -17,7 +17,7 @@
     </h1>
     <p>
         {% if profile_user.birth %}
-        {% if request.user.status.name != 'Заказчик' %}
+        {% if user.status.name != 'Заказчик' %}
         Дата рождения:
         {% else %}
         Выполнить до:
@@ -47,18 +47,23 @@
         </ul>
         {% endif %}
         {% endif %}
-        <form id="new_img_form" class="hero new_edit_form"
+        <div class="userlinks">
+        <form id="new_img_form"
               action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
               enctype="multipart/form-data" style="display: flex">
             {% csrf_token %}
             <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
 
-            <button id="submitButton" class="button" type="submit" name="edit_btn" value="new_image">
-                Сообщения
+            <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">
+                {% if user.id != profile_user.id %} Написать в чат {% else %}Зделать заметку{% endif %}
+
             </button>
         </form>
-        {% if request.user.status.name != 'Заказчик' %}
-        <a href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+        {% if profile_user.status.name != 'Заказчик' %}
+        {% if user.id != profile_user.id %}
+        <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+        {% endif %}
+            </div>
         {% endif %}
     </div>
     {%
@@ -134,6 +139,40 @@
     {% endif %}
 </main>
 {% endif %}
- <script src="{% static '' %}{{ page_style }}/js/script.js"></script>
+{% if request.user.status.name == 'Мастер' %}
+<script>
+    const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
+
+    orderSocket.onopen = function () {
+        console.log('orderSocket connection established.');
+// requestTotalNotify();
+    };
+    orderSocket.onclose = function () {
+        console.log('orderSocket connection closed.');
+    };
+
+    orderSocket.onmessage = function (event) {
+        console.log('orderSocket onmessage');
+        let data = JSON.parse(event.data);
+        if (data.type === 'total_orders') {
+            console.log('orderSocket onmessage', data.num);
+            addOrdersNum(data.num);
+        }
+    };
+
+    // function requestTotalNotify() {
+    //     notifySocket.send(JSON.stringify({'type': 'total'}));
+    // }
+
+    function addOrdersNum(count) {
+        let usersContainer = document.getElementById('orders-total');
+        usersContainer.textContent = count;
+    }
+</script>
+{% else %}
+<script>
+    src = "{% static '' %}{{ page_style }}/js/script.js"
+</script>
+{% endif %}
 {% endblock %}
 

@@ -28,7 +28,7 @@ class EditUserForm(UserCreationForm):
         help_text="Выберите дату рождения",
         required=False
     )
-
+    status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказчик', 'Прораб']), label='Статус')
     class Meta:
         model = CustomUser
         fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'birth',
@@ -120,6 +120,7 @@ class EditCustomerForm(UserCreationForm):
         required=False
     )
     about = forms.CharField(label="О заказе", required=False, widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
+    # status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказчик', 'Прораб']), label='Статус')
 
     class Meta:
         model = CustomUser
@@ -219,24 +220,23 @@ class ContactsForm(forms.ModelForm):
             'messenger': forms.CheckboxSelectMultiple(attrs={'class': 'messenger-checkbox'}),
         }
 
-    def get_messenger_label(self, messenger):
-        return f'<img src="{messenger.icon_path}" alt="{messenger.name}" class="messenger-icon"> {messenger.name}'
+    # def get_messenger_label(self, messenger):
+    #     return f'<img src="{messenger.icon_path}" alt="{messenger.name}" class="messenger-icon"> {messenger.name}'
+    #
+    # def as_messenger_checkbox(self):
+    #     return self._html_output(
+    #         normal_row='<li>%(label)s %(field)s %(help_text)s</li>',
+    #         error_row='%s',
+    #         row_ender='</li>',
+    #         help_text_html='%s',
+    #         errors_on_separate_row=True,
+    #     )
 
-    def as_messenger_checkbox(self):
-        # Customize rendering for messenger checkboxes
-        return self._html_output(
-            normal_row='<li>%(label)s %(field)s %(help_text)s</li>',
-            error_row='%s',
-            row_ender='</li>',
-            help_text_html='%s',
-            errors_on_separate_row=True,
-        )
 
-
-class SpecialisationsForm(forms.ModelForm):
-    class Meta:
-        model = Specialisations
-        fields = ['specialisation']
+# class SpecialisationsForm(forms.ModelForm):
+#     class Meta:
+#         model = Specialisations
+#         fields = ['specialisation']
 
 
 class FineForm(forms.ModelForm):
@@ -245,34 +245,41 @@ class FineForm(forms.ModelForm):
         fields = ['fine']
 
 
-class StatusForm(forms.ModelForm):
-    class Meta:
-        model = Status
-        fields = ['name']
+# class StatusForm(forms.ModelForm):
+#     class Meta:
+#         model = Status
+#         fields = ['name']
 
 
-class PortfolioForm(forms.ModelForm):
-    class Meta:
-        model = Portfolio
-        fields = ['portfolio']
+    # def get_status_choices(self):
+    #     excluded_statuses = ['Заказчик', 'Бригадир']
+    #     statuses = Status.objects.exclude(name__in=excluded_statuses)
+    #     return [(status.id, status.name) for status in statuses]
 
 
-class NotificationsForm(forms.ModelForm):
-    class Meta:
-        model = Notifications
-        fields = ['notification', 'new']
+
+# class PortfolioForm(forms.ModelForm):
+#     class Meta:
+#         model = Portfolio
+#         fields = ['portfolio']
+#
+#
+# class NotificationsForm(forms.ModelForm):
+#     class Meta:
+#         model = Notifications
+#         fields = ['notification', 'new']
 
 
-class TeamForm(forms.ModelForm):
-    class Meta:
-        model = Team
-        fields = ['customer', 'qualify', 'coworkers']
-
-
-class CardForm(forms.ModelForm):
-    class Meta:
-        model = Card
-        fields = ['number', 'date', 'cvs']
+# class TeamForm(forms.ModelForm):
+#     class Meta:
+#         model = Team
+#         fields = ['customer', 'qualify', 'coworkers']
+#
+#
+# class CardForm(forms.ModelForm):
+#     class Meta:
+#         model = Card
+#         fields = ['number', 'date', 'cvs']
 
 
 AddressFormSet = forms.inlineformset_factory(CustomUser, Address, form=AddressForm, can_delete=True, extra=0)

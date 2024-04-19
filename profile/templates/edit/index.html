@@ -3,39 +3,30 @@
 {% load static %}
 <main>
 
-    <form class="card" action="{% url 'edit' username=request.user.username %}" method="POST">
+    <form  id="userForm" class="card" action="{% url 'edit' username=request.user.username %}" method="POST">
         {% csrf_token %}
-
         <h1 class="head_1">{% if request.user %} Профиль {% if request.user.status.name == 'Заказчик' %}заказчика
             {% else %}строителя{% endif %} {{ request.user.username }}{% else %}{{ page_name }} {% endif %}</h1>
-        <button type="submit">Submit</button>
-        {# form.as_p #}
+        <button id="submitButton" type="submit" style="display: none;">Submit</button>
+                <button type="submit">Submit</button>
+
         {% for field in form %}
-        <!--        {{field.as_p}}-->
-        <!--        {% if field.name == 'social_list' %}-->
+        {% if field.name == 'social_list' %}
         <div class="form-group">
             <h2>Соцсети:</h2>
             <ul>
                 {% for key,value in social_list.items %}
                 <li>
                     <img src="{% static value.0 %}" alt=key width="50" height="50">
-                    <input type="text" name="social_link"
-                           value="{{ value.1 }}" placeholder="{{ key }}">
+                    <input type="text" name="social_link" value="{{ value.1 }}" placeholder="{{ key }}">
                 </li>
                 {% endfor %}
             </ul>
         </div>
-
-
-        <!--        {% else %}-->
-        <div class="form-group">
-            {{ field.label_tag }}
-            {{ field }}
-        </div>
-        <!--        {% endif %}-->
+        {% else %}
+        <div class="form-group">{{ field.label_tag }} {{ field }}</div>
+        {% endif %}
         {% endfor %}
-
-
         {{ city_form.as_p }}
         {{ address_form.as_p }}
         <h2>Телефон:</h2>
@@ -57,6 +48,6 @@
         </ul>
     </form>
 </main>
- <script src="{% static '' %}{{ page_style }}/js/script.js"></script>
+<script src="{% static '' %}{{ page_style }}/js/script.js"></script>
 {% endblock %}
 

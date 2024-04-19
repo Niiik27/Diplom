@@ -5,46 +5,40 @@ import APP_NAMES
 
 
 class CustomUser(AbstractUser):
-    """Основная модель пользователя к енй будут подключены любые другие модели"""
     first_name = models.CharField(verbose_name='Имя', max_length=250, blank=True, null=True)
     last_name = models.CharField(verbose_name='Фамилия', max_length=250, blank=True, null=True)
     email = models.CharField(verbose_name="Почта", max_length=254, null=True, blank=True)
-    # phone = models.CharField(verbose_name="Телефон", max_length=254, null=True, blank=True)
     birth = models.DateField(verbose_name="Дата рождения", blank=True, null=True)
     about = models.TextField(verbose_name="О себе", blank=True, null=True)
     specialisation = models.ManyToManyField('Specialisations', verbose_name='Специализация', blank=True)
     social_list = models.ManyToManyField('SocialList', verbose_name='Соцсети',blank=True)
-
     status = models.ForeignKey('Status', verbose_name='Статус', on_delete=models.DO_NOTHING, null=True, blank=True)
-    # qualify = models.IntegerField(verbose_name="Квалификация", null=True, blank=True, default=5,
-    #                               choices={1: "Дешево", 2: "Средне", 3: "Дорого"})
     qualify = models.ForeignKey('Qualify',verbose_name="Квалификация", on_delete=models.DO_NOTHING, null=True,
                                 blank=True, )
     allow = models.ManyToManyField('Allowance', verbose_name='Разрешения',blank = True)
-    # notify = models.ForeignKey('Notifications', verbose_name='Оповещения', on_delete=models.CASCADE,
-    #                                    default=False)
+
 
     def __str__(self):
-        return f'{self.username}| {self.first_name},{self.last_name}, '
+        return f'{self.username}'
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
 
-class Card(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='card')
-
-    number = models.CharField(verbose_name="Номер", max_length=20, null=True, blank=True)
-    date = models.DateField(verbose_name="Действительна до", max_length=5, null=True, blank=True)
-    cvs = models.CharField(verbose_name="Код с обратной стороны карты", max_length=3, null=True, blank=True)
-
-    def __str__(self):
-        return self.user.username
-
-    class Meta:
-        verbose_name = 'Карта'
-        verbose_name_plural = 'Данные банковской карты'
+# class Card(models.Model):
+#     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='card')
+#
+#     number = models.CharField(verbose_name="Номер", max_length=20, null=True, blank=True)
+#     date = models.DateField(verbose_name="Действительна до", max_length=5, null=True, blank=True)
+#     cvs = models.CharField(verbose_name="Код с обратной стороны карты", max_length=3, null=True, blank=True)
+#
+#     def __str__(self):
+#         return self.user.username
+#
+#     class Meta:
+#         verbose_name = 'Карта'
+#         verbose_name_plural = 'Данные банковской карты'
 
 
 class City(models.Model):
@@ -195,33 +189,48 @@ class Qualify(models.Model):
         verbose_name = 'Список квалификаций'
         verbose_name_plural = 'Список квалификаций'
 
+#
+# class Portfolio(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='portfolio')
+#     portfolio = models.TextField(verbose_name="Портфолио", max_length=200, null=True, blank=True)
+#
+#     def __str__(self):
+#         return self.user.username
+#     class Meta:
+#         verbose_name = 'Портфолио'
+#         verbose_name_plural = 'Портфолио'
 
-class Portfolio(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='portfolio')
-    portfolio = models.TextField(verbose_name="Портфолио", max_length=200, null=True, blank=True)
+# class Notifications(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notifications')
+#     notification = models.TextField(verbose_name="Оповещения", max_length=2000, null=True, blank=True)
+#     new = models.BooleanField(verbose_name="Непрочитанное", default=False)
+#     def __str__(self):
+#         return self.user.username
+#     class Meta:
+#         verbose_name = 'Оповещение'
+#         verbose_name_plural = 'Оповещения'
 
-    def __str__(self):
-        return self.user.username
-    class Meta:
-        verbose_name = 'Портфолио'
-        verbose_name_plural = 'Портфолио'
 
-class Notifications(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notifications')
-    notification = models.TextField(verbose_name="Оповещения", max_length=2000, null=True, blank=True)
-    new = models.BooleanField(verbose_name="Непрочитанное", default=False)
-    def __str__(self):
-        return self.user.username
-    class Meta:
-        verbose_name = 'Оповещение'
-        verbose_name_plural = 'Оповещения'
+class Order(models.Model):
+    customer = models.ForeignKey(CustomUser, verbose_name="Заказчик", on_delete=models.CASCADE, related_name='order_customer', null=True,blank=True)
+    master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='order_master', null=True,blank=True)
+    confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
+
+
 
 class Team(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='team')#прораб
-    customer = models.CharField(verbose_name="Заказчик", max_length=254, null=True, blank=True)
-    qualify = models.CharField(verbose_name="Квалификация", max_length=100, null=True, blank=True)#цена-качество
-    coworkers = models.OneToOneField(CustomUser, verbose_name="Сотрудник", on_delete=models.CASCADE,
-                                related_name='team_coworker', null=True, blank=True)
+    master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='team_master',
+                               null=True, blank=True)
+    coworker = models.ForeignKey(CustomUser, verbose_name="Заказчик", on_delete=models.CASCADE,
+                                 related_name='team_user', null=True, blank=True)
+
+    specialisation = models.ForeignKey('Specialisations', verbose_name='Специализация', on_delete=models.CASCADE, null=True, blank=True)
+    status = models.ForeignKey('Status', verbose_name='Статус', on_delete=models.DO_NOTHING, null=True, blank=True)
+
+    qualify = models.ForeignKey('Qualify', verbose_name="Квалификация", on_delete=models.DO_NOTHING, null=True,
+                                blank=True, )
+    allow = models.ManyToManyField('Allowance', verbose_name='Разрешения', blank=True)
+    confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
 
 
     def __str__(self):
