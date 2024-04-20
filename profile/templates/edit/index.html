@@ -5,10 +5,10 @@
 
     <form  id="userForm" class="card" action="{% url 'edit' username=request.user.username %}" method="POST">
         {% csrf_token %}
-        <h1 class="head_1">{% if request.user %} Профиль {% if request.user.status.name == 'Заказчик' %}заказчика
-            {% else %}строителя{% endif %} {{ request.user.username }}{% else %}{{ page_name }} {% endif %}</h1>
+        <h1 class="head_1">{% if request.user %}  {% if request.user.status.name == 'Заказ' %}Заполните параметры заказа
+            {% else %}Профиль строителя{% endif %} {{ request.user.username }}{% else %}{{ page_name }} {% endif %}</h1>
         <button id="submitButton" type="submit" style="display: none;">Submit</button>
-                <button type="submit">Submit</button>
+<!--                <button type="submit">Submit</button>-->
 
         {% for field in form %}
         {% if field.name == 'social_list' %}

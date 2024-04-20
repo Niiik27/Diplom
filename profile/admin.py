@@ -202,7 +202,7 @@ def create_external_lists(sender, **kwargs):
         Status.objects.get_or_create(name='Мастер')# Профессионал, но получает уведомления о заказах
         # Это скрытые статусы. но они инициируют всю работу
         Status.objects.get_or_create(name='Прораб')#Мастер становится прорабом когда берет заказ
-        Status.objects.get_or_create(name='Заказчик')# Когда регится заказчик рассылаются уведомления
+        Status.objects.get_or_create(name='Заказ')# Когда регится заказчик рассылаются уведомления
 
         Qualify.objects.get_or_create(name='Дешево')
         Qualify.objects.get_or_create(name='Средне')

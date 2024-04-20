@@ -12,12 +12,13 @@
             <a id="saveLink" href="#" class="" type="button">Сохранить</a>
             {% else %}
             <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>
-            {% endif %}
-            {% if request.user.status.name != 'Заказчик' %}
+            {% if request.user.status.name != 'Заказ' %}
             <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>
             {% endif %}
-            {% if request.user.status.name == 'Мастер' %}
-            <a href="{% url 'users'  %}">Заказы <span id="orders-total">0</span></a>
+            {% endif %}
+
+            {% if request.user.status.name == 'Мастер' and page_style != 'orders' %}
+            <a href="{% url 'orders'  %}">Заказы <span id="orders-total">0</span></a>
             {% endif %}
             {% endif %}
         </div>
@@ -25,7 +26,18 @@
 
         <div id="menu">
             {% if user.is_authenticated == False %}
+
+            {% if page_style == 'home' %}
             <a href="{% url 'login' %}" class="" type="button">Вход</a>
+            {% else %}
+            {% if page_style == 'login' %}
+            <a href="{% url 'register' %}" class="" type="button">Регистрация</a>
+            {% else %}
+            <a id="commit-register" href="#" class="" type="button">Зарегистрироваться</a>
+            {% endif %}
+
+            {% endif %}
+
             {% else %}
 
             <a href="{% url 'users'  %}" type="button">Пользователи <span id="users">0</span></a>
@@ -36,7 +48,10 @@
             {% endif %}
             {% endif %}
         </div>
+
     </div>
+    <div>{{ page_style }}</div>
+
     {% if user.is_authenticated %}
     <script>
 

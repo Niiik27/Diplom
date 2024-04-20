@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+    <!--<div class="container">-->
+    <!--    <div class="">-->
+    <!--        {% for user in customuser_list %}-->
+    <!--        <div class="">-->
+    <!--            <div class="card">-->
+    <!--                <div class="">-->
+    <!--                    <a href="{% url 'profile' username=user.username %}" class="username">{{ user.username }} </a>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--        {% endfor %}-->
+    <!--    </div>-->
+    <!--</div>-->
+
+    {% for order in order_list %}
+    <a href="{% url 'profile' order.customer.username %}">
+        <p>Заказ: {{ order.customer.username }}</p>
+        <p>Категория: {{ order.customer.first_name }}</p>
+        <p>Описание: {{ order.customer.about }}</p>
+    </a>
+    {% endfor %}
+
+    {% endblock content %}
+</main>
+
+

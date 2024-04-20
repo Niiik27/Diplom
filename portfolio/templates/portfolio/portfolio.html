@@ -3,6 +3,7 @@
 {% block content %}
 {% load static %}
 <main>
+
     {% if portfolio %}
     <section class="wrapper gallery">
         <div id="img_view" style="display: none">
@@ -16,8 +17,11 @@
                 <div id="img_date">Дата: <span>dat</span></div>
                 <div id="img_urls">В сотрудничестве: <span>ssilki</span></div>
                 <div id="img_id" hidden="hidden">ID: <span>id</span></div>
+                <div>
+                    <button id="edit-image" class="edit-button"><span>Редактировать</span></button>
+                    <button id="delete-image" class="edit-button"><span>Удалить</span></button>
+                </div>
             </div>
-
         </div>
         <ul class="thumbs">
             {% for artwork in portfolio %}
@@ -32,35 +36,43 @@
                 <!--            <span class="thumb__txt">{{ artwork.desc|truncatechars:20 }}</span>-->
             </li>
             {% endfor %}
+            <li class="thumb__blockddd">
+                <button id="add-new-image"><span>+</span></button>
+            </li>
         </ul>
-         </section>
-          {% endif %}
-        <section class="wrapper gallery">
-            <form id="new_img_form" class="hero new_edit_form" action="{% url 'portfolio' username %} " method="POST"
-                  enctype="multipart/form-data" style="display: none">
-                <div>Здесь приделал форму из формы джанго, с возможностью настраивать стили для лейблов и полей</div>
-                {% csrf_token %}
-                <input id="edit_mode" type="text" name="edit_mode" hidden="hidden">
+
+    </section>
+    {% else %}
+    <section class="wrapper gallery">
+        <button id="add-new-image"><span>+</span></button>
+    </section>
+    {% endif %}
+    <section class="wrapper gallery">
+        <form id="new_img_form" class="hero new_edit_form" action="{% url 'portfolio' username %} " method="POST"
+              enctype="multipart/form-data" style="display: none">
+            <div>Здесь приделал форму из формы джанго, с возможностью настраивать стили для лейблов и полей</div>
+            {% csrf_token %}
+            <input id="edit_mode" type="text" name="edit_mode" hidden="hidden">
 
 
-                {% for field in form %}
-                <div class="my_field">
-                    {% if field.label != 'id_img' %}
-                    <label class="my_label" for="{{ field.auto_id }}">{{ field.label }}</label>
-                    {% endif %}
-                    {{ field }}
-                </div>
-                {% endfor %}
-                <div class="submits">
-                    <button id="submitButton" class="button" type="submit" name="edit_btn" value="new_image">
-                    </button>
-<!--                    <button id="editButton" class="button" type="submit" name="edit_btn" value="edit_image">Изменить-->
-<!--                    </button>-->
-<!--                    <button id="delButton" class="button" type="submit" name="edit_btn" value="delete_image">Удалить-->
-<!--                    </button>-->
-                </div>
-            </form>
-        </section>
+            {% for field in form %}
+            <div class="my_field">
+                {% if field.label != 'id_img' %}
+                <label class="my_label" for="{{ field.auto_id }}">{{ field.label }}</label>
+                {% endif %}
+                {{ field }}
+            </div>
+            {% endfor %}
+            <div class="submits">
+                <button id="submitButton" class="button" type="submit" name="edit_btn" value="new_image">
+                </button>
+                <!--                    <button id="editButton" class="button" type="submit" name="edit_btn" value="edit_image">Изменить-->
+                <!--                    </button>-->
+                <!--                    <button id="delButton" class="button" type="submit" name="edit_btn" value="delete_image">Удалить-->
+                <!--                    </button>-->
+            </div>
+        </form>
+    </section>
     <script src="{% static '' %}{{ page_style }}/js/gallery.js"></script>
 </main>
 {% endblock %}

@@ -211,17 +211,20 @@ class Qualify(models.Model):
 #         verbose_name_plural = 'Оповещения'
 
 
-class Order(models.Model):
-    customer = models.ForeignKey(CustomUser, verbose_name="Заказчик", on_delete=models.CASCADE, related_name='order_customer', null=True,blank=True)
-    master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='order_master', null=True,blank=True)
-    confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
+# class Order(models.Model):
+#     customer = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE, related_name='order_customer', null=True,blank=True)
+#     master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='order_master', null=True,blank=True)
+#     confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
+#     has_brigde = models.BooleanField(verbose_name="Бригада укомплектована",default=False)
+#     timestamp = models.DateTimeField(verbose_name='Время', auto_now_add=True)
+
 
 
 
 class Team(models.Model):
     master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='team_master',
                                null=True, blank=True)
-    coworker = models.ForeignKey(CustomUser, verbose_name="Заказчик", on_delete=models.CASCADE,
+    coworker = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE,
                                  related_name='team_user', null=True, blank=True)
 
     specialisation = models.ForeignKey('Specialisations', verbose_name='Специализация', on_delete=models.CASCADE, null=True, blank=True)

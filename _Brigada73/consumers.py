@@ -301,7 +301,7 @@ class OrderConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_total_orders(self):
 
-        order_model = apps.get_model(app_label='profile', model_name='Order')
+        order_model = apps.get_model(app_label='orders', model_name='Order')
         new_orders = order_model.objects.filter(confirmed=False)
         customer_ids = []
         for order in new_orders:
@@ -314,7 +314,7 @@ class OrderConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_orders(self):
         me = self.scope['user']
-        order_model = apps.get_model(app_label='profile', model_name='Order')
+        order_model = apps.get_model(app_label='orders', model_name='Order')
         new_orders = order_model.objects.filter(confirmed=False)
         customer_ids = []
         for order in new_orders:

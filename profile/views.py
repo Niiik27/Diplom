@@ -1,10 +1,5 @@
-import asyncio
 import json
-import time
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
-from django.contrib.sessions.models import Session
 
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
@@ -14,10 +9,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView
-from _Brigada73.consumers import get_order_channel_name, OrderConsumer
 
-from _Brigada73.consumers import OrderConsumer
 from _Brigada73.socket_client import SOCKET
+from orders.models import Order
 from .forms import *
 from .models import CustomUser
 
@@ -73,7 +67,7 @@ class UserLoginView(LoginView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
+        context['page_style'] = APP_NAMES.LOGIN[APP_NAMES.NAME]
         return context
 
 
@@ -97,10 +91,10 @@ class UserCreateView(CreateView):
             if user is not None:
                 login(request, user)
 
-                if user.status.name == 'Заказчик':
+                if user.status.name == 'Заказ':
                     Order.objects.create(customer=user)
 
-                return redirect(reverse(f'{APP_NAMES.PROFILE[APP_NAMES.NAME]}', kwargs={'username': user.username}))
+                return redirect(reverse(f'{APP_NAMES.EDIT[APP_NAMES.NAME]}', kwargs={'username': user.username}))
             else:
                 return HttpResponseRedirect(request.get_full_path())
         else:
@@ -202,10 +196,14 @@ class UserUpdateView(UpdateView):
         user.save()
         # print("META", self.request.META)
         # print("COOKIES", self.request.COOKIES)
-        token = self.request.COOKIES.get('csrftoken')
-        sessionid = self.request.COOKIES.get('sessionid')
 
-        if user.status.name == 'Заказчик':
+
+        if user.status.name == 'Заказ':
+            order, created = Order.objects.get_or_create(customer=user)
+            #пока не решил - нужно ли оповещать если детали заказа изменятся.
+            #например если изменится город то точно нужно оповещать
+            token = self.request.COOKIES.get('csrftoken')
+            sessionid = self.request.COOKIES.get('sessionid')
             ws = SOCKET(token, sessionid, user)
             ws.connect()
             # ws.send_notify("Your message here")
@@ -292,3 +290,9 @@ class CustomUserListView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
         return context
+
+# class OrderListView(ListView):
+#     model = Order
+#     template_name = f'{APP_NAMES.ORDERS[APP_NAMES.NAME]}/index.html'
+#     context_object_name = 'order_list'
+#     ordering = ['-timestamp']

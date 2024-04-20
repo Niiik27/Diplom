@@ -117,7 +117,8 @@ const mainView = document.getElementById('img_view');
 console.log("mainView");
 console.log(mainView);
 
-if (mainView) {
+if (mainView)
+{
     const mainBlock = mainView.children;
 // const mainImage = mainBlock.namedItem('main-image');
 // mainImage.hidden="hidden"
@@ -182,9 +183,9 @@ if (mainView) {
 
     mainView.addEventListener('click', (event) => {
         console.log(event.target.tagName)
-        //   if (event.target.id === "next_btn"||event.target.id === "prev_btn") {
-        //   return;
-        // }
+        if (event.target.id === "edit-image" || event.target.id === "delete-image") {
+            return;
+        }
         if (event.target.tagName === "BUTTON") {
             return;
         }
@@ -229,58 +230,7 @@ if (mainView) {
         mainImage_id.textContent = img_id.textContent;
         current_img_idx = index;
     }
-
-}
-/**Блок добавления новой картинки*/
-const imgEditMode = document.getElementById('edit_mode');
-const newImgForm = document.getElementById('new_img_form');
-const textFields = newImgForm.getElementsByClassName('txt-input');
-const idField = textFields.namedItem('id');
-const imageField = document.getElementById('img_file');
-const titleField = textFields.namedItem('title');
-const descField = textFields.namedItem('desc');
-const dateField = textFields.namedItem('date');
-const urlsField = textFields.namedItem('url');
-
-const submitBtn = document.getElementById("submitButton");
-
-let header = document.getElementById('menu');
-const button = document.createElement('button');
-button.innerHTML = 'Добавить';
-header.appendChild(button);
-button.addEventListener("click", () => {
-    imgEditMode.value = "new_image";
-    imgEditMode.required = true;
-    imageField.required = true;
-    titleField.required = true;
-    idField.required = false;
-    descField.required = false;
-    dateField.required = false;
-    urlsField.required = false;
-
-    imageField.value = "";
-    titleField.value = "";
-    descField.value = "";
-    dateField.value = "";
-    urlsField.value = "";
-    idField.value = "";
-    if (newImgForm.style.display === 'none') {
-        newImgForm.style.display = 'flex';
-        newImgForm.style.zIndex = 'var(--max-z-index)';
-        submitBtn.innerHTML = "Отправить"
-    } else {
-        newImgForm.style.display = 'none';
-        newImgForm.style.zIndex = '-1';
-    }
-});
-
-/**Блок редактирования картинки*/
-    // const editImgForm = document.getElementById('new_img_form');
-    // let header = document.getElementsByClassName('header-right')[0];
-let editbutton = document.createElement('button');
-
-editbutton.innerHTML = 'Редактировать';
-header.appendChild(editbutton);
+let editbutton = document.getElementById('edit-image');
 editbutton.addEventListener("click", () => {
     imgEditMode.value = "edit_image";
     imageField.required = false;
@@ -307,11 +257,8 @@ editbutton.addEventListener("click", () => {
 
 });
 
-/**Блок удаления картинки*/
-const deletebutton = document.createElement('button');
 
-deletebutton.innerHTML = 'Удалить';
-header.appendChild(deletebutton);
+let deletebutton = document.getElementById('delete-image');
 deletebutton.addEventListener("click", () => {
     imageField.required = false;
     titleField.required = false;
@@ -324,4 +271,50 @@ deletebutton.addEventListener("click", () => {
     idField.value = mainImage_id.textContent;
     submitBtn.click();
 });
-// submitBtn.ontouchend();
+}
+/**Блок добавления новой картинки*/
+const imgEditMode = document.getElementById('edit_mode');
+const newImgForm = document.getElementById('new_img_form');
+const textFields = newImgForm.getElementsByClassName('txt-input');
+const idField = textFields.namedItem('id');
+const imageField = document.getElementById('img_file');
+const titleField = textFields.namedItem('title');
+const descField = textFields.namedItem('desc');
+const dateField = textFields.namedItem('date');
+const urlsField = textFields.namedItem('url');
+
+const submitBtn = document.getElementById("submitButton");
+
+let header = document.getElementById('menu');
+// const button = document.createElement('button');
+// button.innerHTML = 'Добавить';
+// header.appendChild(button);
+let button = document.getElementById('add-new-image');
+
+button.addEventListener("click", () => {
+    imgEditMode.value = "new_image";
+    imgEditMode.required = true;
+    imageField.required = true;
+    titleField.required = true;
+    idField.required = false;
+    descField.required = false;
+    dateField.required = false;
+    urlsField.required = false;
+
+    imageField.value = "";
+    titleField.value = "";
+    descField.value = "";
+    dateField.value = "";
+    urlsField.value = "";
+    idField.value = "";
+    if (newImgForm.style.display === 'none') {
+        newImgForm.style.display = 'flex';
+        newImgForm.style.zIndex = 'var(--max-z-index)';
+        submitBtn.innerHTML = "Отправить"
+    } else {
+        newImgForm.style.display = 'none';
+        newImgForm.style.zIndex = '-1';
+    }
+});
+
+

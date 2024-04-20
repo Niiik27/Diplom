@@ -17,7 +17,7 @@
     </h1>
     <p>
         {% if profile_user.birth %}
-        {% if user.status.name != 'Заказчик' %}
+        {% if user.status.name != 'Заказ' %}
         Дата рождения:
         {% else %}
         Выполнить до:
@@ -48,22 +48,22 @@
         {% endif %}
         {% endif %}
         <div class="userlinks">
-        <form id="new_img_form"
-              action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
-              enctype="multipart/form-data" style="display: flex">
-            {% csrf_token %}
-            <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
+            <form id="new_img_form"
+                  action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
+                  enctype="multipart/form-data" style="display: flex">
+                {% csrf_token %}
+                <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
 
-            <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">
-                {% if user.id != profile_user.id %} Написать в чат {% else %}Зделать заметку{% endif %}
+                <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">
+                    {% if user.id != profile_user.id %} Написать в чат {% else %}Зделать заметку{% endif %}
 
-            </button>
-        </form>
-        {% if profile_user.status.name != 'Заказчик' %}
-        {% if user.id != profile_user.id %}
-        <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
-        {% endif %}
-            </div>
+                </button>
+            </form>
+            {% if profile_user.status.name != 'Заказ' %}
+            {% if user.id != profile_user.id %}
+            <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
     {%
@@ -93,14 +93,14 @@
     </ul>
     {% endif %}
     {% if profile_user.qualify %}
-    <h2>{% if request.user.status.name != 'Заказчик' %}Квалификация: {% else %}Оплата:{% endif %}</h2>
+    <h2>{% if request.user.status.name != 'Заказ' %}Квалификация: {% else %}Оплата:{% endif %}</h2>
     <p>{{ profile_user.qualify }}</p>
     {% endif %}
     {% if profile_user.about %}
-    <h2> {% if request.user.status.name != 'Заказчик' %}О себе: {% else %}Требуется:{% endif %}</h2>
+    <h2> {% if request.user.status.name != 'Заказ' %}О себе: {% else %}Требуется:{% endif %}</h2>
     <p>{{ profile_user.about }}</p>
     {% endif %}
-    {% if request.user.status.name != 'Заказчик' %}
+    {% if request.user.status.name != 'Заказ' %}
     {% if specialization %}
     <h2>Специализации:</h2>
     <ul>
@@ -137,10 +137,56 @@
         {% endfor %}
     </ul>
     {% endif %}
+    {% url 'take' customer=profile_user.username %}
+    <form method="POST" action="{% url 'take' customer=profile_user.username %}">
+        {% csrf_token %}
+        <input type="hidden" name="customer_id" value="{{ profile_user.id }}">
+        <button type="submit">Взять заказ</button>
+    </form>
+    <a href="{% url 'take' customer=profile_user.username %}"> Куда она ведет</a>
+    <button id="sendButton">Отправить запрос</button>
+
+
 </main>
 {% endif %}
 {% if request.user.status.name == 'Мастер' %}
 <script>
+
+
+    $(document).ready(function () {
+        // Обработчик события клика по кнопке
+        $("#sendButton").click(function () {
+            // Данные для отправки (можете изменить на свои)
+            let requestData = {
+                customer_id: "{{ profile_user.id }}",
+            };
+
+            // Отправка POST-запроса
+            $.ajax({
+                type: "POST",
+                url: "{% url 'take' customer=profile_user.username %}", // Замените на ваш URL
+                data: requestData,
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    console.log("Запрос успешно отправлен:", response);
+                    $("#sendButton").hide();
+
+                    // Создаем новый HTML элемент с текстом "В работе"
+                    var newTextElement = $("<p>В работе</p>");
+
+                    // Добавляем новый элемент после кнопки
+                    $("#sendButton").after(newTextElement);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Произошла ошибка:", error);
+                }
+            });
+        });
+    });
+
+
     const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
 
     orderSocket.onopen = function () {

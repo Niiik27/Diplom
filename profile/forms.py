@@ -28,7 +28,7 @@ class EditUserForm(UserCreationForm):
         help_text="Выберите дату рождения",
         required=False
     )
-    status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказчик', 'Прораб']), label='Статус')
+    status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказ', 'Прораб']), label='Статус')
     class Meta:
         model = CustomUser
         fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'birth',
