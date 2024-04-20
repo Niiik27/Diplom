@@ -3,6 +3,7 @@ from django.views.generic import ListView, View
 from django.http import JsonResponse
 
 import APP_NAMES
+from profile.models import Status
 from .models import CustomUser, Order
 
 app_name = APP_NAMES.ORDERS[APP_NAMES.NAME]
@@ -17,7 +18,7 @@ class OrderListView(ListView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Order.objects.filter(customer__address__city=user.address.city)
+        queryset = Order.objects.filter(customer__address__city=user.address.city,master=None)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -26,17 +27,26 @@ class OrderListView(ListView):
         return context
 
 
-
 class TakeOrderView(View):
-
     def post(self, request, *args, **kwargs):
         customer_id = request.POST.get('customer_id')
         if customer_id:
+            user_id = self.request.user.pk
+            user = get_object_or_404(CustomUser, pk=user_id)
+
+            status = user.status
+            if status.name == 'Мастер':
+                new_status = Status.objects.get(name='Прораб')
+                user.status = new_status
+                user.save()
+
             order = get_object_or_404(Order, customer_id=customer_id, master=None)
             order.master_id = request.user.id
             order.save()
 
-
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
+
+
+

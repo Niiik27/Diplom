@@ -137,14 +137,26 @@
         {% endfor %}
     </ul>
     {% endif %}
-    {% url 'take' customer=profile_user.username %}
-    <form method="POST" action="{% url 'take' customer=profile_user.username %}">
-        {% csrf_token %}
-        <input type="hidden" name="customer_id" value="{{ profile_user.id }}">
-        <button type="submit">Взять заказ</button>
-    </form>
-    <a href="{% url 'take' customer=profile_user.username %}"> Куда она ведет</a>
-    <button id="sendButton">Отправить запрос</button>
+    <!--    <form method="POST" action="{% url 'take' customer=profile_user.username %}">-->
+    <!--        {% csrf_token %}-->
+    <!--        <input type="hidden" name="customer_id" value="{{ profile_user.id }}">-->
+    <!--        <button type="submit">Взять заказ</button>-->
+    <!--    </form>-->
+    {% if user.status.name == 'Мастер' and profile_user.status.name == 'Заказ' %}
+        {% if order_master %}
+                <div>Заказ в работе</div>
+        {% else %}
+            <button id="sendButton">Взять заказ</button>
+        {% endif %}
+    {% else %}
+        {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
+            {% if order_master %}
+                {% if order_master == user %}
+                    <div>Вы прораб на этом объекте</div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
 
 
 </main>
@@ -154,9 +166,7 @@
 
 
     $(document).ready(function () {
-        // Обработчик события клика по кнопке
         $("#sendButton").click(function () {
-            // Данные для отправки (можете изменить на свои)
             let requestData = {
                 customer_id: "{{ profile_user.id }}",
             };
@@ -164,7 +174,7 @@
             // Отправка POST-запроса
             $.ajax({
                 type: "POST",
-                url: "{% url 'take' customer=profile_user.username %}", // Замените на ваш URL
+                url: "{% url 'take' customer=profile_user.username %}",
                 data: requestData,
                 headers: {
                     "X-CSRFToken": "{{ csrf_token }}"
@@ -172,11 +182,7 @@
                 success: function (response) {
                     console.log("Запрос успешно отправлен:", response);
                     $("#sendButton").hide();
-
-                    // Создаем новый HTML элемент с текстом "В работе"
-                    var newTextElement = $("<p>В работе</p>");
-
-                    // Добавляем новый элемент после кнопки
+                    let newTextElement = $("<p>Заказ в работе</p>");
                     $("#sendButton").after(newTextElement);
                 },
                 error: function (xhr, status, error) {

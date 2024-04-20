@@ -29,6 +29,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        print(context)
         user = self.request.user
         context['user'] = user
         user_social_profiles = UserSocial.objects.filter(user=self.request.user)
@@ -49,6 +50,22 @@ class ProfileView(LoginRequiredMixin, DetailView):
             context['social_list'] = sl_res
         else:
             context['role'] = 'customer'
+
+        prodile_user = context['object']
+        if prodile_user.status:
+            print(prodile_user.status)
+            if prodile_user.status.name == 'Заказ':
+                #Если это заказ то он стопудово есть в ордерах. доп проверка не требуется. разве что на случай сбоя
+                order = Order.objects.get(customer=prodile_user)
+                if order is not None:
+                    print(order.master.username)
+                    # будет так: если есть исполнитель то заказ в работе, если исполнитель авторизованный пользователь то он
+                    # увидет что он прораб на этом заказе
+                    context['order_master'] = order.master# будет так: если ордер есть то
+                    # if order is not None:
+                    #     context['in_work'] = True
+                    # else:
+                    #     context['in_work'] = False
 
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
