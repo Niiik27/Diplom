@@ -222,16 +222,15 @@ class Qualify(models.Model):
 
 
 class Team(models.Model):
-    master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='team_master',
+    brigadir = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='team_master',
                                null=True, blank=True)
     coworker = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE,
                                  related_name='team_user', null=True, blank=True)
-
     specialisation = models.ForeignKey('Specialisations', verbose_name='Специализация', on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey('Status', verbose_name='Статус', on_delete=models.DO_NOTHING, null=True, blank=True)
-
     qualify = models.ForeignKey('Qualify', verbose_name="Квалификация", on_delete=models.DO_NOTHING, null=True,
                                 blank=True, )
+    city = models.ForeignKey('City', verbose_name="Город", on_delete=models.DO_NOTHING, null=True, blank=True,)
     allow = models.ManyToManyField('Allowance', verbose_name='Разрешения', blank=True)
     confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
 

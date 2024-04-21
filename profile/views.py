@@ -1,6 +1,5 @@
 import json
 
-
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,7 +7,7 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView
+from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView, View
 
 from _Brigada73.socket_client import SOCKET
 from orders.models import Order
@@ -35,7 +34,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
         user_social_profiles = UserSocial.objects.filter(user=self.request.user)
         social_list = SocialList.objects.all()
         if user.status_id != len(Status.objects.all()):
-            context['role'] = 'builder'
             sl_res = {}
             for i in range(len(social_list)):
                 social_name = social_list[i].name
@@ -48,24 +46,25 @@ class ProfileView(LoginRequiredMixin, DetailView):
                             break
 
             context['social_list'] = sl_res
-        else:
-            context['role'] = 'customer'
 
         prodile_user = context['object']
         if prodile_user.status:
             print(prodile_user.status)
             if prodile_user.status.name == 'Заказ':
-                #Если это заказ то он стопудово есть в ордерах. доп проверка не требуется. разве что на случай сбоя
                 order = Order.objects.get(customer=prodile_user)
                 if order is not None:
-                    print(order.master.username)
-                    # будет так: если есть исполнитель то заказ в работе, если исполнитель авторизованный пользователь то он
-                    # увидет что он прораб на этом заказе
-                    context['order_master'] = order.master# будет так: если ордер есть то
-                    # if order is not None:
-                    #     context['in_work'] = True
-                    # else:
-                    #     context['in_work'] = False
+                    context['order_master'] = order.master
+            if prodile_user.status.name == 'Прораб':
+                statuses = Status.objects.exclude(name__in=['Прораб', 'Заказ','Мастер'])
+                if statuses is not None:
+                    context['statuses'] = statuses
+                specialisations = Specialisations.objects.all()
+                if specialisations is not None:
+                    context['specialisations'] = specialisations
+                qualifyes = Qualify.objects.all()
+                if qualifyes is not None:
+                    context['qualifyes'] = qualifyes
+
 
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
@@ -133,11 +132,9 @@ class UserUpdateView(UpdateView):
 
             form = EditUserForm(instance=user)
             context = {'form': form}
-            context['role'] = 'builder'
         else:
             form = EditCustomerForm(instance=user)
             context = {'form': form}
-            context['role'] = 'customer'
         form.fields.pop('password1')
         form.fields.pop('password2')
 
@@ -214,18 +211,15 @@ class UserUpdateView(UpdateView):
         # print("META", self.request.META)
         # print("COOKIES", self.request.COOKIES)
 
-
         if user.status.name == 'Заказ':
             order, created = Order.objects.get_or_create(customer=user)
-            #пока не решил - нужно ли оповещать если детали заказа изменятся.
-            #например если изменится город то точно нужно оповещать
+            # пока не решил - нужно ли оповещать если детали заказа изменятся.
+            # например если изменится город то точно нужно оповещать
             token = self.request.COOKIES.get('csrftoken')
             sessionid = self.request.COOKIES.get('sessionid')
             ws = SOCKET(token, sessionid, user)
             ws.connect()
             # ws.send_notify("Your message here")
-
-
 
         contact_user = Contacts.objects.get(user=user)
         contact_user.phone = phone
@@ -308,8 +302,38 @@ class CustomUserListView(ListView):
         context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
         return context
 
-# class OrderListView(ListView):
-#     model = Order
-#     template_name = f'{APP_NAMES.ORDERS[APP_NAMES.NAME]}/index.html'
-#     context_object_name = 'order_list'
-#     ordering = ['-timestamp']
+# class Team(models.Model):
+#     brigadir = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE, related_name='team_master',
+#                                null=True, blank=True)
+#     coworker = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE,
+#                                  related_name='team_user', null=True, blank=True)
+#     specialisation = models.ForeignKey('Specialisations', verbose_name='Специализация', on_delete=models.CASCADE, null=True, blank=True)
+#     status = models.ForeignKey('Status', verbose_name='Статус', on_delete=models.DO_NOTHING, null=True, blank=True)
+#     qualify = models.ForeignKey('Qualify', verbose_name="Квалификация", on_delete=models.DO_NOTHING, null=True,
+#                                 blank=True, )
+#     city = models.ForeignKey('City', verbose_name="Город", on_delete=models.DO_NOTHING, null=True, blank=True,)
+#     allow = models.ManyToManyField('Allowance', verbose_name='Разрешения', blank=True)
+#     confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
+#
+#
+#
+# class CreateTeamView(View):
+#     def post(self, request, *args, **kwargs):
+#         brigadir = self.request.user
+#         if brigadir:
+#             user_id = self.request.user.pk
+#             user = get_object_or_404(CustomUser, pk=user_id)
+#
+#             status = user.status
+#             if status.name == 'Прораб':
+#                 team = Team.objects.get_or_create(brigadir=brigadir)
+#                 user.status = new_status
+#                 user.save()
+#
+#             order = get_object_or_404(Order, customer_id=customer_id, master=None)
+#             order.master_id = request.user.id
+#             order.save()
+#
+#             return JsonResponse({'success': True})
+#         else:
+#             return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)

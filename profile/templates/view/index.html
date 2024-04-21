@@ -143,56 +143,155 @@
     <!--        <button type="submit">Взять заказ</button>-->
     <!--    </form>-->
     {% if user.status.name == 'Мастер' and profile_user.status.name == 'Заказ' %}
-        {% if order_master %}
-                <div>Заказ в работе</div>
-        {% else %}
-            <button id="sendButton">Взять заказ</button>
-        {% endif %}
+    {% if order_master %}
+    <div>Заказ в работе</div>
     {% else %}
-        {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
-            {% if order_master %}
-                {% if order_master == user %}
-                    <div>Вы прораб на этом объекте</div>
-                {% endif %}
-            {% endif %}
-        {% endif %}
+    <button id="sendButton">Взять заказ</button>
+    {% endif %}
+    {% else %}
+    {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
+    {% if order_master %}
+    {% if order_master == user %}
+    <div>Вы прораб на этом объекте</div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
     {% endif %}
 
+    {% if user == profile_user %}
+    {% if user.status.name == 'Прораб' %}
+    <h2>У Вас есть заказ. Вы должны создать свою бригаду:</h2>
+    <form method="post" action="{#url 'create_brigade' #}">
+        {% csrf_token %}
+        <div class="form-group" id="workers">
+            <!-- Поля для первого специалиста -->
+            <div class="worker">
+                <select name="specialty">
+                    {% for specialisation in specialisations %}
+                    <option value="{{ specialisation.id }}">{{ specialisation.specialisation }}</option>
+                    {% endfor %}
+                </select>
+                <select name="status">
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}">{{ status.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="qualify">
+                    {% for qualify in qualifyes %}
+                    <option value="{{ qualify.id }}">{{ qualify.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="notes" placeholder="Примечания">
+            </div>
+        </div>
+        <button id="addWorkerBtn" type="button">Добавить специалиста</button>
+        <button type="submit">Создать бригаду</button>
+    </form>
+    {% endif %}
+    {% endif %}
 
 </main>
 {% endif %}
+
+
+{% if request.user.status.name == 'Прораб' %}
+<script>
+    let addWorkerBtn = document.getElementById('addWorkerBtn');
+    addWorkerBtn.addEventListener("click", () => {
+        let workersContainer = document.getElementById('workers');
+        let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
+        workersContainer.appendChild(newWorker);
+    });
+
+
+    // $(document).ready(function () {
+    //     $('#addWorkerBtn').click(function () {
+    //         let newWorker = $('.worker').first().clone();
+    //         $('#workers').append(newWorker);
+    //     });
+    // });
+    //
+    //
+    //     document.addEventListener('DOMContentLoaded', function () {
+    //     document.getElementById('addWorkerBtn').addEventListener('click', function () {
+    //         let workersContainer = document.getElementById('workers');
+    //         let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
+    //         workersContainer.appendChild(newWorker);
+    //     });
+    // });
+</script>
+{% endif %}
+
+
 {% if request.user.status.name == 'Мастер' %}
 <script>
-
-
-    $(document).ready(function () {
-        $("#sendButton").click(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('sendButton').addEventListener('click', function () {
             let requestData = {
                 customer_id: "{{ profile_user.id }}",
             };
 
-            // Отправка POST-запроса
-            $.ajax({
-                type: "POST",
-                url: "{% url 'take' customer=profile_user.username %}",
-                data: requestData,
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                success: function (response) {
-                    console.log("Запрос успешно отправлен:", response);
-                    $("#sendButton").hide();
-                    let newTextElement = $("<p>Заказ в работе</p>");
-                    $("#sendButton").after(newTextElement);
-                },
-                error: function (xhr, status, error) {
-                    console.error("Произошла ошибка:", error);
+            // Создание объекта XMLHttpRequest
+            let xhr = new XMLHttpRequest();
+
+            // Настройка запроса
+            xhr.open('POST', "{% url 'take' customer=profile_user.username %}", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRFToken', "{{ csrf_token }}");
+
+            // Обработка события успешного завершения запроса
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    console.log('Запрос успешно отправлен:', xhr.responseText);
+                    document.getElementById('sendButton').style.display = 'none';
+                    let newTextElement = document.createElement('p');
+                    newTextElement.textContent = 'Заказ в работе';
+                    document.getElementById('sendButton').insertAdjacentElement('afterend', newTextElement);
+                } else {
+                    console.error('Произошла ошибка:', xhr.statusText);
                 }
-            });
+            };
+
+            // Обработка события ошибки запроса
+            xhr.onerror = function () {
+                console.error('Произошла ошибка при выполнении запроса');
+            };
+
+            // Отправка запроса
+            xhr.send(JSON.stringify(requestData));
         });
     });
 
 
+    //Тут запрос на подмену кнопки
+    // $(document).ready(function () {
+    //     $("#sendButton").click(function () {
+    //         let requestData = {
+    //             customer_id: "{{ profile_user.id }}",
+    //         };
+    //
+    //         // Отправка POST-запроса
+    //         $.ajax({
+    //             type: "POST",
+    //             url: "{% url 'take' customer=profile_user.username %}",
+    //             data: requestData,
+    //             headers: {
+    //                 "X-CSRFToken": "{{ csrf_token }}"
+    //             },
+    //             success: function (response) {
+    //                 console.log("Запрос успешно отправлен:", response);
+    //                 $("#sendButton").hide();
+    //                 let newTextElement = $("<p>Заказ в работе</p>");
+    //                 $("#sendButton").after(newTextElement);
+    //             },
+    //             error: function (xhr, status, error) {
+    //                 console.error("Произошла ошибка:", error);
+    //             }
+    //         });
+    //     });
+    // });
+
+    //Дальше сокеты
     const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
 
     orderSocket.onopen = function () {

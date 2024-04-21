@@ -10,7 +10,15 @@ button {
     justify-content: center;
     align-items: center; */
 }
+select {
+    background-color: black;
+    color: white; /* Цвет текста внутри списка */
+}
 
+input {
+    background-color: black;
+    color: white; /* Цвет текста внутри списка */
+}
 .userlink, button[type="submit"] {
     background: none;
     border: none;

@@ -53,6 +53,7 @@
     <div>{{ page_style }}</div>
 
     {% if user.is_authenticated %}
+    {% if user.status.name == 'Мастер' %}
     <script>
 
         const notifySocket = new WebSocket('ws://127.0.0.1:8002/ws/notify/');
@@ -88,6 +89,6 @@
             usersContainer.textContent = count;
         }
     </script>
-
+    {% endif %}
     {% endif %}
 </header>
