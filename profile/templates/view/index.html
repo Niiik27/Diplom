@@ -55,7 +55,7 @@
                 <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
 
                 <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">
-                    {% if user.id != profile_user.id %} Написать в чат {% else %}Зделать заметку{% endif %}
+                    {% if user.id != profile_user.id %} Написать в чат {% else %}Сделать заметку{% endif %}
 
                 </button>
             </form>
@@ -160,33 +160,30 @@
 
     {% if user == profile_user %}
     {% if user.status.name == 'Прораб' %}
-    <h2>У Вас есть заказ. Вы должны создать свою бригаду:</h2>
-    <form method="post" action="{#url 'create_brigade' #}">
-        {% csrf_token %}
-        <div class="form-group" id="workers">
-            <!-- Поля для первого специалиста -->
-            <div class="worker">
-                <select name="specialty">
-                    {% for specialisation in specialisations %}
-                    <option value="{{ specialisation.id }}">{{ specialisation.specialisation }}</option>
-                    {% endfor %}
-                </select>
-                <select name="status">
-                    {% for status in statuses %}
-                    <option value="{{ status.id }}">{{ status.name }}</option>
-                    {% endfor %}
-                </select>
-                <select name="qualify">
-                    {% for qualify in qualifyes %}
-                    <option value="{{ qualify.id }}">{{ qualify.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="text" name="notes" placeholder="Примечания">
-            </div>
-        </div>
-        <button id="addWorkerBtn" type="button">Добавить специалиста</button>
-        <button type="submit">Создать бригаду</button>
-    </form>
+    {% url 'team' username=user.username %}
+    <h2><a href="{% url 'team' username=user.username %}">У Вас есть заказ {{ order_customer.username }}. Вы должны
+        создать свою бригаду:</a></h2>
+    <h2>Бригада</h2>
+    <br>
+        <p>Бригадир: {{ team.brigadir }}</p>
+    <p>Заказ: {{ order_customer.username }}</p>
+    <br>
+    {% for team in teams %}
+
+
+    <p>Специализация: {{ team.specialisation }}</p>
+    <p>Статус: {{ team.status }}</p>
+    <p>Квалификация: {{ team.qualify }}</p>
+<!--    <p>Город: {{ team.city }}</p>-->
+    <h3>Разрешения:</h3>
+    <ul>
+        {% for allow in team.allow.all %}
+        <li>{{ allow }}</li>
+        {% endfor %}
+    </ul>
+    <p>Подтверждение сотрудничества: {{ team.confirmed }}</p>
+    <br>
+    {% endfor %}
     {% endif %}
     {% endif %}
 
@@ -194,102 +191,36 @@
 {% endif %}
 
 
-{% if request.user.status.name == 'Прораб' %}
-<script>
-    let addWorkerBtn = document.getElementById('addWorkerBtn');
-    addWorkerBtn.addEventListener("click", () => {
-        let workersContainer = document.getElementById('workers');
-        let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
-        workersContainer.appendChild(newWorker);
-    });
-
-
-    // $(document).ready(function () {
-    //     $('#addWorkerBtn').click(function () {
-    //         let newWorker = $('.worker').first().clone();
-    //         $('#workers').append(newWorker);
-    //     });
-    // });
-    //
-    //
-    //     document.addEventListener('DOMContentLoaded', function () {
-    //     document.getElementById('addWorkerBtn').addEventListener('click', function () {
-    //         let workersContainer = document.getElementById('workers');
-    //         let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
-    //         workersContainer.appendChild(newWorker);
-    //     });
-    // });
-</script>
-{% endif %}
-
-
 {% if request.user.status.name == 'Мастер' %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('sendButton').addEventListener('click', function () {
+
+    //Тут запрос на подмену кнопки
+    $(document).ready(function () {
+        $("#sendButton").click(function () {
             let requestData = {
                 customer_id: "{{ profile_user.id }}",
             };
 
-            // Создание объекта XMLHttpRequest
-            let xhr = new XMLHttpRequest();
-
-            // Настройка запроса
-            xhr.open('POST', "{% url 'take' customer=profile_user.username %}", true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.setRequestHeader('X-CSRFToken', "{{ csrf_token }}");
-
-            // Обработка события успешного завершения запроса
-            xhr.onload = function () {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    console.log('Запрос успешно отправлен:', xhr.responseText);
-                    document.getElementById('sendButton').style.display = 'none';
-                    let newTextElement = document.createElement('p');
-                    newTextElement.textContent = 'Заказ в работе';
-                    document.getElementById('sendButton').insertAdjacentElement('afterend', newTextElement);
-                } else {
-                    console.error('Произошла ошибка:', xhr.statusText);
+            // Отправка POST-запроса
+            $.ajax({
+                type: "POST",
+                url: "{% url 'take' customer=profile_user.username %}",
+                data: requestData,
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    console.log("Запрос успешно отправлен:", response);
+                    $("#sendButton").hide();
+                    let newTextElement = $("<p>Заказ в работе</p>");
+                    $("#sendButton").after(newTextElement);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Произошла ошибка:", error);
                 }
-            };
-
-            // Обработка события ошибки запроса
-            xhr.onerror = function () {
-                console.error('Произошла ошибка при выполнении запроса');
-            };
-
-            // Отправка запроса
-            xhr.send(JSON.stringify(requestData));
+            });
         });
     });
-
-
-    //Тут запрос на подмену кнопки
-    // $(document).ready(function () {
-    //     $("#sendButton").click(function () {
-    //         let requestData = {
-    //             customer_id: "{{ profile_user.id }}",
-    //         };
-    //
-    //         // Отправка POST-запроса
-    //         $.ajax({
-    //             type: "POST",
-    //             url: "{% url 'take' customer=profile_user.username %}",
-    //             data: requestData,
-    //             headers: {
-    //                 "X-CSRFToken": "{{ csrf_token }}"
-    //             },
-    //             success: function (response) {
-    //                 console.log("Запрос успешно отправлен:", response);
-    //                 $("#sendButton").hide();
-    //                 let newTextElement = $("<p>Заказ в работе</p>");
-    //                 $("#sendButton").after(newTextElement);
-    //             },
-    //             error: function (xhr, status, error) {
-    //                 console.error("Произошла ошибка:", error);
-    //             }
-    //         });
-    //     });
-    // });
 
     //Дальше сокеты
     const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');

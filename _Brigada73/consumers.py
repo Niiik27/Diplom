@@ -7,6 +7,7 @@ from unidecode import unidecode
 
 from django.db.models import Q
 
+from Print import Print
 
 chat_users = set()
 online_users = set()
@@ -86,11 +87,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender_name': sender_name,
             'receiver_name': receiver_name,  # пока не нужный параметр
         })
-
+    @database_sync_to_async
+    def get_total_unread_num(self):
+        me = self.scope['user']
+        message_model = apps.get_model(app_label='message', model_name='Message')
+        unread_messages = message_model.objects.filter(receiver=me, status=False)
+        unread_messages_count = unread_messages.count()
+        return unread_messages_count
     async def send_notify(self, channel_name):  # Вызовется в Notify
         await self.channel_layer.group_send(channel_name,
                                             {
-                                                "type": 'total_num_notify_message'})  # Как побочный эффект выполнения этого метода
+                                                "type": 'total_num_notify_message','num':1, 'notify_type':'new_msg'})  # Как побочный эффект выполнения этого метода
 
     async def chat_message(self, event):  # не удалять!!! это нужно для "type": message_type, имя метода = значению type
         await self.send(text_data=json.dumps({"message": event["message"], 'status': event["status"],
@@ -198,6 +205,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                     'statuses': read_ids
                 }))
                 num = await self.get_total_unread_num()
+                Print.yellow(num)
                 await self.send_message(num)
 
     @database_sync_to_async
@@ -221,11 +229,12 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(get_channel_name(self.scope['user'].id), {
             "type": 'total_num_notify_message',
             'num': num,
+            'notify_type':'total',
         })
 
     async def total_num_notify_message(self, event):
         # num = await self.get_total_unread_num()
-        await self.send(text_data=json.dumps({"num": event['num'], "type": "total"}))
+        await self.send(text_data=json.dumps({"num": event['num'], "type": event["notify_type"]}))
 
     async def chat_message(self, event):  # не удалять!!! это нужно для "type": message_type, имя метода = значению type
         pass

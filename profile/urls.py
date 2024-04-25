@@ -15,9 +15,7 @@ urlpatterns = [
     path(f'{APP_NAMES.REGISTER[APP_NAMES.NAME]}/', views.UserCreateView.as_view(), name = APP_NAMES.REGISTER[APP_NAMES.NAME]),
     path(f'{APP_NAMES.LOGOUT[APP_NAMES.NAME]}/', my_logout_view, name=APP_NAMES.LOGOUT[APP_NAMES.NAME]),
     path(f'{APP_NAMES.USERS[APP_NAMES.NAME]}/', views.CustomUserListView.as_view(), name=APP_NAMES.USERS[APP_NAMES.NAME]),
-    # path(f'{APP_NAMES.ORDERS[APP_NAMES.NAME]}/', views.OrderListView.as_view(), name=APP_NAMES.ORDERS[APP_NAMES.NAME]),
     path('<str:username>/', views.ProfileView.as_view(), name=APP_NAMES.PROFILE[APP_NAMES.NAME]),
     path(f'<str:username>/{APP_NAMES.EDIT[APP_NAMES.NAME]}/', views.UserUpdateView.as_view(), name=APP_NAMES.EDIT[APP_NAMES.NAME]),
-
 ]
 

@@ -1,6 +1,30 @@
 import os
 import subprocess
 from sys import argv
+import subprocess
+def update_requirements_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+        updated_lines = [line.replace('==', '>=') for line in lines]
+        with open(file_path, 'w') as file:
+            file.writelines(updated_lines)
+        print("requirements успешно обновлен до последней версии.")
+    except FileNotFoundError:
+        print(f"Файл {file_path} не найден.")
+
+# Пример использования функции
+
+# Запуск команды "pip freeze --upgrade" и запись вывода в файл
+with open("requirements.txt", "w") as f:
+    result = subprocess.run(["pip", "freeze"], stdout=f, text=True)
+
+# Проверка статуса выполнения команды
+if result.returncode == 0:
+    print("Зависимости обновлены")
+else:
+    print("Не удалось обновить зависимости:", result.stderr)
+update_requirements_file('requirements.txt')
 
 def get_project_name():
     current_dir = os.path.abspath(os.getcwd())

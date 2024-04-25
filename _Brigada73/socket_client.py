@@ -30,15 +30,15 @@ class SOCKET:
 
     def on_open(self, *args, **kwargs):
         print("pyOrderSocket connection established.")
-        data = {"type": "user_id", 'user_id': self.user.id}
-        self.ws.send(json.dumps(data))
+        # data = {"type": "user_id", 'user_id': self.user.id}
+        # self.ws.send(json.dumps(data))
         self.connection_event.set()
 
     def on_close(self, *args, **kwargs):
         print("pyOrderSocket connection closed.")
 
-    def send_notify(self, message):
-        data = {"type": "new_order", "message": message, 'user_id': self.user.id}
+    def send_notify(self, message,type):
+        data = {"type": type, "message": message, 'user_id': self.user.id}
         self.ws.send(json.dumps(data))
 
     def on_error(self, error, *args, **kwargs):

@@ -30,6 +30,8 @@ urlpatterns = [
     path('<str:username>/', include(f'{APP_NAMES.HOME[APP_NAMES.NAME]}.urls')),
 
     path(f'<str:username>/{APP_NAMES.PORTFOLIO[APP_NAMES.NAME]}', include(f'{APP_NAMES.PORTFOLIO[APP_NAMES.NAME]}.urls')),
+    path(f'<str:username>/{APP_NAMES.TEAM[APP_NAMES.NAME]}',include(f'{APP_NAMES.TEAM[APP_NAMES.NAME]}.urls')),
+
     path(f'<str:username>/{APP_NAMES.MESSAGE[APP_NAMES.NAME]}/<str:recipient>',include(f'{APP_NAMES.MESSAGE[APP_NAMES.NAME]}.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

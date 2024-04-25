@@ -120,8 +120,9 @@
                     unreadVisibleMessageIds.push(message.getAttribute('id'));
                 }
             });
-
+            if (unreadVisibleMessageIds.length>0)
             return JSON.stringify({'type': 'read_report', 'read_ids': unreadVisibleMessageIds});
+            else return  null;
         }
 
         function checkVisibility() {

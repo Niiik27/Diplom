@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+    {% if user.status.name == 'Прораб' %}
+    <h2>Создайте бригаду для заказа {{ order_customer.username }}</h2>
+    <!--    <form method="post" action="{% url 'team' username=user.username %}">-->
+    <!--        {% csrf_token %}-->
+    <div class="form-group" id="workers">
+        <!-- Поля для первого специалиста -->
+        <div class="worker">
+            <select name="specialisation">
+                {% for specialisation in specialisations %}
+                <option value="{{ specialisation.id }}">{{ specialisation.specialisation }}</option>
+                {% endfor %}
+            </select>
+            <select name="status">
+                {% for status in statuses %}
+                <option value="{{ status.id }}">{{ status.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="qualify">
+                {% for qualify in qualifies %}
+                <option value="{{ qualify.id }}">{{ qualify.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="city">
+                {% for city in cities %}
+                <option value="{{ city.id }}">{{ city.name }}</option>
+                {% endfor %}
+            </select>
+            {% for allowance in allowances %}
+            <p>
+                <input type="checkbox" id="{{ allowance.id }}" name="allowances" value="{{ allowance.id }}">
+                <label for="{{ allowance.id }}">{{ allowance.allow }}</label><br>
+            </p>
+            {% endfor %}
+            <input type="text" name="notes" placeholder="Примечания">
+        </div>
+    </div>
+    <button id="addWorkerBtn" type="button">Добавить специалиста</button>
+    <button id="createTeam">Создать бригаду</button>
+    <!--    </form>-->
+    {% endif %}
+</main>
+<script>
+    let addWorkerBtn = document.getElementById('addWorkerBtn');
+    addWorkerBtn.addEventListener("click", () => {
+        let workersContainer = document.getElementById('workers');
+        let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
+
+        // Изменяем имена полей ввода, добавляя уникальный индекс
+        let newIndex = workersContainer.getElementsByClassName('worker').length;
+        newWorker.querySelectorAll('select, input').forEach(input => {
+            input.name = input.name.replace(/\d+/g, newIndex);
+        });
+
+        workersContainer.appendChild(newWorker);
+    });
+
+    $(document).ready(function () {
+        let requestData = [];
+        $("#createTeam").click(function (event) {
+            event.preventDefault();
+
+            $(".worker").each(function () {
+                let workerData = {
+                    specialisation: $(this).find("select[name='specialisation']").val(),
+                    status: $(this).find("select[name='status']").val(),
+                    qualify: $(this).find("select[name='qualify']").val(),
+                    city: $(this).find("select[name='city']").val(),
+                    allowances: $(this).find("input[name='allowances']:checked").map(function () {
+                        return $(this).val();
+                    }).get(),
+                    notes: $(this).find("input[name='notes']").val()
+                };
+                requestData.push(workerData);
+            });
+
+            console.log("requestData",requestData);
+            // Отправка POST-запроса
+            $.ajax({
+                type: "POST",
+                url: "{% url 'team' username=user.username %}",
+                data: { workers: JSON.stringify(requestData)},
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    console.log("Запрос успешно отправлен:", response);
+                    $("#createTeam").hide();
+                    let newTextElement = $("<p>Бригада создана</p>");
+                    $("#createTeam").after(newTextElement);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Произошла ошибка:", error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

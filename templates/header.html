@@ -11,9 +11,11 @@
             {% if page_style == 'edit' %}
             <a id="saveLink" href="#" class="" type="button">Сохранить</a>
             {% else %}
+            {% if page_style != 'team' %}
             <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>
             {% if request.user.status.name != 'Заказ' %}
             <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>
+            {% endif %}
             {% endif %}
             {% endif %}
 
@@ -53,7 +55,7 @@
     <div>{{ page_style }}</div>
 
     {% if user.is_authenticated %}
-    {% if user.status.name == 'Мастер' %}
+
     <script>
 
         const notifySocket = new WebSocket('ws://127.0.0.1:8002/ws/notify/');
@@ -76,6 +78,9 @@
             } else if (data.type === 'total') {
                 addUnreadNum(data.num);
                 console.log('Пришло уведомление о количестве сообщений', data.num, data.type);
+            } else if (data.type === 'new_msg') {
+                addNewUnreadNum(data.num);
+                console.log('Пришло уведомление о новом сообщении', data.num, data.type);
             }
 
         };
@@ -88,7 +93,15 @@
             let usersContainer = document.getElementById('users');
             usersContainer.textContent = count;
         }
+
+        function addNewUnreadNum(count) {
+            let usersContainer = document.getElementById('users');
+            let currentCount = parseInt(usersContainer.textContent);
+            let newCount = currentCount + count;
+            usersContainer.textContent = newCount;
+        }
+
     </script>
-    {% endif %}
+
     {% endif %}
 </header>
