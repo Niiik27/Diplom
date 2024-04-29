@@ -90,32 +90,9 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
                 new_team.allow.add(*allowances)
                 new_team.save()
 
-            # for worker in workers:
-            #     specialisation_id = worker['specialisation']
-            #     status_id = worker['status']
-            #     qualify_id = worker['qualify']
-            #     city_id = worker['city']
-            #     allowances = worker['allowances']
-            #
-            #
-            #     specialisation_obj = Specialisations.objects.get(id=specialisation_id)
-            #     status_obj = Status.objects.get(id=status_id)
-            #     qualify_obj = Qualify.objects.get(id=qualify_id)
-            #     city_obj = City.objects.get(id=city_id)
-            #
-            #
-            #     team.specialisation = specialisation_obj
-            #     team.status = status_obj
-            #     team.qualify = qualify_obj
-            #     team.city = city_obj
-            #     team.allow.add(*allowances)
-            #     team.save()
-
-                token = self.request.COOKIES.get('csrftoken')
-                sessionid = self.request.COOKIES.get('sessionid')
-                ws = SOCKET(token, sessionid, brigadir)
+                ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
                 ws.connect()
-                ws.send_notify("", "user_id")
+                ws.send_notify("","from_server_notify_new_team")
         return JsonResponse({'success': True})
         # else:
         #     return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)

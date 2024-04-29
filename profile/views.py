@@ -9,6 +9,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView, View
 
+from Print import Print
 from _Brigada73.socket_client import SOCKET
 from orders.models import Order
 from team.models import Team
@@ -129,9 +130,9 @@ class UserCreateView(CreateView):
             user = authenticate(username=new_user.username, password=request.POST['password1'])
             if user is not None:
                 login(request, user)
-
-                if user.status.name == 'Заказ':
-                    Order.objects.create(customer=user)
+                if user.status is not None:
+                    if user.status.name == 'Заказ':
+                        Order.objects.create(customer=user)
 
                 return redirect(reverse(f'{APP_NAMES.EDIT[APP_NAMES.NAME]}', kwargs={'username': user.username}))
             else:
@@ -183,9 +184,10 @@ class UserUpdateView(UpdateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
-        user_id = self.request.user.pk
+        user = self.request.user
+        # user_id = user.pk
         # print("self.request", dir(self.request))
-        user = get_object_or_404(CustomUser, pk=user_id)
+        # user = get_object_or_404(CustomUser, pk=user_id)
         # if request.POST:
         # password1 = request.POST['password1']
         # password2 = request.POST['password2']
@@ -233,16 +235,14 @@ class UserUpdateView(UpdateView):
         user.save()
         # print("META", self.request.META)
         # print("COOKIES", self.request.COOKIES)
+        Print.blue("Сохранение профиля в процессе")
 
         if user.status.name == 'Заказ':
+            Print.blue("Обновление уведомления о заказе")
             order, created = Order.objects.get_or_create(customer=user)
-            # пока не решил - нужно ли оповещать если детали заказа изменятся.
-            # например если изменится город то точно нужно оповещать
-            token = self.request.COOKIES.get('csrftoken')
-            sessionid = self.request.COOKIES.get('sessionid')
-            ws = SOCKET(token, sessionid, user)
+            ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
             ws.connect()
-            ws.send_notify("","user_id")
+            ws.send_notify("","from_server_notify_new_order")
 
         contact_user = Contacts.objects.get(user=user)
         contact_user.phone = phone

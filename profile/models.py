@@ -117,7 +117,6 @@ class Allowance(models.Model):
 
 
 class Specialisations(models.Model):
-    # user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='user_specialisation')
     specialisation = models.CharField(verbose_name="Специализация", max_length=254, null=True, blank=True)
 
     def __str__(self):

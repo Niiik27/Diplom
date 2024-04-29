@@ -223,37 +223,37 @@
     });
 
     //Дальше сокеты
-    const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
-
-    orderSocket.onopen = function () {
-        console.log('orderSocket connection established.');
-// requestTotalNotify();
-    };
-    orderSocket.onclose = function () {
-        console.log('orderSocket connection closed.');
-    };
-
-    orderSocket.onmessage = function (event) {
-        console.log('orderSocket onmessage');
-        let data = JSON.parse(event.data);
-        if (data.type === 'total_orders') {
-            console.log('orderSocket onmessage', data.num);
-            addOrdersNum(data.num);
-        }
-    };
+//     const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
+//
+//     orderSocket.onopen = function () {
+//         console.log('orderSocket connection established.');
+// // requestTotalNotify();
+//     };
+//     orderSocket.onclose = function () {
+//         console.log('orderSocket connection closed.');
+//     };
+//
+//     orderSocket.onmessage = function (event) {
+//         console.log('orderSocket onmessage');
+//         let data = JSON.parse(event.data);
+//         if (data.type === 'total_orders') {
+//             console.log('orderSocket onmessage', data.num);
+//             addOrdersNum(data.num);
+//         }
+//     };
 
     // function requestTotalNotify() {
     //     notifySocket.send(JSON.stringify({'type': 'total'}));
     // }
 
-    function addOrdersNum(count) {
-        let usersContainer = document.getElementById('orders-total');
-        usersContainer.textContent = count;
-    }
+    // function addOrdersNum(count) {
+    //     let usersContainer = document.getElementById('orders-total');
+    //     usersContainer.textContent = count;
+    // }
 </script>
 {% else %}
-<script>
-    src = "{% static '' %}{{ page_style }}/js/script.js"
+<script src = "{% static '' %}{{ page_style }}/js/script.js">
+
 </script>
 {% endif %}
 {% endblock %}

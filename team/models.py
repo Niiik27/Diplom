@@ -18,7 +18,7 @@ class Team(models.Model):
 
 
     def __str__(self):
-        return self.user.username
+        return self.brigadir.username
     class Meta:
         verbose_name = 'Бригада'
         verbose_name_plural = 'Бригада'

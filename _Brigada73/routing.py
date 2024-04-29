@@ -6,9 +6,8 @@ from .middleware import TokenAuthMiddleware
 
 websocket_urlpatterns = [
     path('ws/chat/', consumers.ChatConsumer.as_asgi()),
-    path('ws/history/', consumers.HistoryConsumer.as_asgi()),
     path('ws/notify/', consumers.NotifyConsumer.as_asgi()),
-    path('ws/order/', consumers.OrderConsumer.as_asgi()),
+    # path('ws/order/', consumers.OrderConsumer.as_asgi()),
 ]
 # application = ProtocolTypeRouter({
 #     'websocket': AuthMiddlewareStack(
