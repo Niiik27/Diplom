@@ -2,6 +2,8 @@ import websocket
 import json
 from threading import Thread, Event
 
+from Print import Print
+
 
 class SOCKET:
     def __init__(self, url, request):
@@ -38,5 +40,5 @@ class SOCKET:
         data = {"type": notify_type, "message": message, 'user_id': self.user_id}
         self.ws.send(json.dumps(data))
 
-    def on_error(self, error, *args, **kwargs):
-        print("py client error:", error)
+    def on_error(self, error:TypeError, *args, **kwargs):
+        Print.red("py client error:", error)

@@ -1,6 +1,8 @@
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import get_channel_layer
+
 from django.apps import apps
 import json
 
@@ -11,7 +13,7 @@ from django.db.models import Q
 from Print import Print
 
 chat_users = set()
-online_users = set()
+online_users = {}
 
 
 async def redis_disconnect(self, *args):
@@ -31,8 +33,14 @@ translit_dict = {
 }
 
 
-def get_chat_channel_name(user_id):
-    return f"chanel_{user_id}"
+def get_chat_channel_name(user):
+    return f"{user.username}_{user.id}"
+def build_chat_channel_name(username, user_id):
+    return f"{username}_{user_id}"
+
+
+def get_spec_channel_name(spec):
+    return f"spec_{spec.id}"
 
 
 @sync_to_async
@@ -53,7 +61,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         user = self.scope['user']
-        group_name = get_chat_channel_name(user.id)
+        group_name = get_chat_channel_name(user)
         await self.channel_layer.group_add(
             group_name,
             self.channel_name
@@ -62,7 +70,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        group_name = get_chat_channel_name(self.scope['user'].id)
+        group_name = get_chat_channel_name(self.scope['user'])
         chat_users.discard(group_name)
         await self.close()
 
@@ -73,8 +81,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         content = text_data_json['message']
         receiver_id = text_data_json['channel_name']
-        channel_name = get_chat_channel_name(receiver_id)
         receiver_name = text_data_json['receiver_name']
+        group_name = build_chat_channel_name(receiver_name, receiver_id)
         sender_name = text_data_json['sender_name']
         sender_id = text_data_json['sender_id']
         sender = await self.get_user_by_id(sender_id)
@@ -91,10 +99,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'sender_name': sender_name,
                     'receiver_name': receiver_name,
                 }))
-            if channel_name in chat_users:
-                await self.send_message(sender_name, receiver_name, channel_name, content, message_type, message_id)
-            if channel_name in online_users:
-                await self.send_notify_about_new_message(channel_name)
+            if group_name in chat_users:
+                await self.send_message(sender_name, receiver_name, group_name, content, message_type, message_id)
+            if receiver_id in online_users:
+                await self.send_notify_about_new_message(group_name)
 
         elif message_type == 'history':
             messages = await self.get_messages(sender, receiver)
@@ -149,8 +157,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'receiver_name': message['receiver_name'],
                 }))
 
-    async def send_message(self, sender_name, receiver_name, channel_name, message, message_type, msg_id):
-        await self.channel_layer.group_send(channel_name, {
+    async def send_message(self, sender_name, receiver_name, group_name, message, message_type, msg_id):
+        await self.channel_layer.group_send(group_name, {
             "type": message_type,
             'status': 'false',
             'id': msg_id,
@@ -167,8 +175,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         unread_messages_count = unread_messages.count()
         return unread_messages_count
 
-    async def send_notify_about_new_message(self, channel_name):
-        await self.channel_layer.group_send(channel_name, {"type": 'send_notify', 'notify_type': 'new_msg', 'num': 1, })
+    async def send_notify_about_new_message(self, group_name):
+        await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_msg', 'num': 1, })
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({"message": event["message"], 'status': event["status"],
@@ -186,6 +194,9 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         if not self.user.is_anonymous:
             Print.purpur("Подключился пользователь из браузера", await self.get_status_name())
             user_status = await self.get_status_name()
+            channel_name = self.channel_name
+            online_users[self.user.id] = channel_name
+
             if user_status == "Мастер":  # Еще нужны оповещения для простых строителей. это все статусы до мастера.
                 # Мастерам и доступна инфа о заказах но недоступна о бригадах.
                 # То есть они не могут наняться в бригаду в качестве работника. Они сами должжны создавать бригаду
@@ -193,29 +204,30 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 group_name = await get_order_channel_name(self.user)
                 await self.channel_layer.group_add(
                     group_name,
-                    self.channel_name
+                    channel_name
                 )
-                online_users.add(group_name)
+                # online_users.add(group_name)
                 num = await self.get_total_orders()
                 await self.send_total_orders(group_name, num)
             elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
                 Print.purpur("Строитель подключлся из браузера")
                 group_name = await get_team_channel_name(self.user)
+                Print.yellow(group_name)
                 await self.channel_layer.group_add(
                     group_name,
-                    self.channel_name
+                    channel_name
                 )
-                online_users.add(group_name)
-                num = await self.get_total_orders()
-                await self.send_total_orders(group_name, num)
+                # online_users.add(group_name)
+                num = await self.get_total_teams()
+                await self.send_total_teams(group_name, num)
 
             # Сообщения будут доступны всем статусам
-            group_name = get_chat_channel_name(self.user.id)
+            group_name = get_chat_channel_name(self.user)
             await self.channel_layer.group_add(
                 group_name,
-                self.channel_name
+                channel_name
             )
-            online_users.add(group_name)
+            # online_users.add(group_name)
 
             num = await self.get_total_unread_num()
             Print.yellow(num)
@@ -228,9 +240,9 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             await self.accept()  # это выполнимо для обоих исходов  но так понятнее для кого подключениие
 
     async def disconnect(self, close_code):
-        group_name = get_chat_channel_name(self.scope['user'].id)
-        online_users.discard(group_name)
-        await self.close()
+        if not self.user.is_anonymous:
+            online_users.pop(self.user.id, None)
+            await self.close()
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
@@ -266,13 +278,14 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
             Print.purpurs("Теперь он", self.user)
-            group_name = await get_team_channel_name(self.user)
-            Print.purpur("И он находится в групппе", group_name)
-            await self.channel_layer.group_add(
-                group_name,
-                self.channel_name
-            )
+            # group_name = get_spec_channel_name(self.user)
+            # Print.purpur("И он находится в групппе", group_name)
+            # await self.channel_layer.group_add(
+            #     group_name,
+            #     self.channel_name
+            # )
             num = await self.filter_teams()
+            # await self.send_notify_about_new_team(group_name)
             Print.blue("Питонский клиент отправляет инфо о том что он увеличил количество бригад на 1")
             # await self.send_total_orders(group_name,num)
             # await self.send_notify_about_new_team(group_name)# Пусть клиент сам считает количество воходящих
@@ -302,162 +315,73 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_total_teams(self):  # Это вызовется когда я создам бригаду или отредактирую ее
+        team_model = apps.get_model(app_label='team', model_name='Team')
         # brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
-        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
-        team_model = apps.get_model(app_label='team',
-                                    model_name='Team')  # нахожу свою бригаду, она может быть только одна, для новой бригады требуется новый аккаунт
-        my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
-
-        for specialist in my_new_team:
-            specialisation = specialist.specialisation
-            # allow_filter = Q(allow__id__in=specialisation.allow)
-            candidate = custom_user_model.objects.filter(
-                # allow_filter,
-                address__city=specialist.city,
-                status=specialist.status,
-                qualify=specialist.qualify,
-                specialisation__in=[specialisation],
-            )
-
-            for allow in specialist.allow.all():
-                candidate &= candidate.filter(allow=allow)
-
-            print("my_new_team", candidate)
-
-        # my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None).first()
-        # specialisation = my_new_team.specialisation.specialisation
-
-        # Получаем бригаду бригадира
-
-        #     specialisations = my_new_team.specialisation
-        #     Print.green("Удалось отфильтровать пользователей", specialisations.specialisation)
-        #     candidate = custom_user_model.objects.filter(city=my_new_team.city, specialisation__in=my_new_team.specialisation.all())
-        #
-        #
-        #
-        # # new_teams = team_model.objects.filter(city=self.user.address.city, coworker=None,#Обязательные требования
-        # #                                       specialisation__in=self.user.specialisation.all(), status=self.user.status,
-        # #                                       qualify=self.user.qualify)
-        #
-        # # matching_users = self.user_model.objects.filter(
-        # #     Q(allow__in=brigade_allowances) &
-        # #     Q(other_criteria_here)
-        # # ).distinct()
-        #
-
-        #
-        # if not new_teams:#Смягчаем условия выборки - убираем статус, потому что это лишь самооценка.
-        #     Print.red("Не нашлось пользователей со строгим соответствием. Смягчили поиск - исключили статус")
-        #     new_teams = team_model.objects.filter(city=self.user.address.city, coworker=None,  # Обязательные требования
-        #                                           specialisation=self.user.specialisation,
-        #                                           qualify=self.user.qualify, allow=self.user.allow)
-        #
-        #     if not new_teams:#Смягчаем условия выборки - убираем квалификацию, это предмет для торга и ответственности
-        #         Print.red("Не нашлось пользователей без статуса Смягчили поиск - исключили квалификацию")
-        #         new_teams = team_model.objects.filter(city=self.user.address.city, coworker=None,  # Обязательные требования
-        #                                               specialisation=self.user.specialisation, allow=self.user.allow)
-        #         # brigade_allowances = team_model.allow.all()
-        #         # matching_users = self.user.objects.annotate(
-        #         #     matching_allowances=Count('profile__allow', filter=models.Q(profile__allow__in=brigade_allowances))
-        #         # ).filter(matching_allowances=len(brigade_allowances))
-        #         # Print.greens("matching_users",matching_users)
-        #
-        #
-        #
-        #
-        #         if not new_teams:  # Дальше видимо нельзя смягчать
-        #             # потому что под эти требования нельзя подстрроиться, но для удобств разработки придется смягчить
-        #             #Исключаю разрешения
-        #             Print.purpur("Не нашлось пользователей без квалификации Смягчили поиск - исключили разрешения")
-        #             new_teams = team_model.objects.filter(city=self.user.address.city, coworker=None,  # Обязательные требования
-        #                                                   specialisation=self.user.specialisation)
-        #             if not new_teams:  # Это смягчение очень глупое, но так удобней
-        #                 Print.purpur("Не нашлось пользователей без разрешений Смягчили поиск - исключили специализацию")
-        #                 new_teams = team_model.objects.filter(city=self.user.address.city, coworker=None)
-        #                 if not new_teams:  # Еще более идиотское смягчение
-        #                     Print.purpur("Не нашлось пользователей без специализации Смягчили поиск - исключили разрешения")
-        #                     new_teams = team_model.objects.filter(coworker=None)
-        #                     if not new_teams:  # Наивысшая степень дибилизма, зато наверняка я что то увижу браузере
-        #                         Print.purpur("Вообше исключили все фильтры")
-        #                         new_teams = team_model.objects.all()
-
-        # customer_ids = []
-        # for team in new_teams:
-        #     customer = team.customer
-        #     if customer.address.city == self.user.address.city:
-        #         customer_ids.append(customer)
-        # num_orders = len(customer_ids)
-        return 1
+        my_new_team = team_model.objects.filter(
+            city=self.user.address.city,
+            specialisation__id__in=[spec.id for spec in self.user.specialisation.all()],
+            coworker=None
+        )
+        return my_new_team.count()
 
     @database_sync_to_async
     def filter_teams(self):
-        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
-        candidates = custom_user_model.objects.none()
+        candidates = None
         team_model = apps.get_model(app_label='team', model_name='Team')
         my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
+
         for specialist in my_new_team:
-            specialisation = specialist.specialisation
-            required_filter = Q(address__city=specialist.city)
+            group_name = get_spec_channel_name(specialist)
+            candidates = self.filter_specialist(specialist)
+            # async_to_sync(self.channel_layer.group_add)(group_name, self.channel_name)
+
+            for member in candidates:
+                channel_name = online_users.get(member.id)
+                if channel_name is not None:
+                    print("Пытаемся получить имя канала кандидата",channel_name)
+                    async_to_sync(self.channel_layer.group_add)(group_name, channel_name)
+
+            # async_to_sync(self.send_notify_about_new_team)(group_name)
+            print("Канал кандидата", group_name)
+            # async_to_sync(channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
+            async_to_sync(self.send_notify_about_new_team)(group_name)
+        return candidates
+
+    # @database_sync_to_async
+    def filter_specialist(self, specialist, qualify=True, status=True, spec=True, allow=True, address=True):
+        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        candidates = custom_user_model.objects.none()
+        specialisations = specialist.specialisation
+        if address: required_filter = Q(address__city=specialist.city)
+        if status:
             required_filter &= Q(status=specialist.status)
-            required_filter &= Q(qualify=specialist.qualify)
-            required_filter &= Q(specialisation__in=[specialisation])
+        else:
+            required_filter &= ~Q(status__name__in=["Заказ", "Прораб"])
+        if qualify: required_filter &= Q(qualify=specialist.qualify)
+        if spec: required_filter &= Q(specialisation__in=[specialisations])
+        if allow:
             allowed_permissions = specialist.allow.all()
             allowed_permission_ids = [permission.id for permission in allowed_permissions]
             filtered_candidates = custom_user_model.objects.filter(required_filter)
             for allow_id in allowed_permission_ids:
                 filtered_candidates = filtered_candidates.filter(allow__id=allow_id)
             candidates |= filtered_candidates
+        candidates |= custom_user_model.objects.filter(required_filter)
 
-        print("my_new_team", candidates.count())
-
-
-        # custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
-        # candidates = custom_user_model.objects.none()
-        # team_model = apps.get_model(app_label='team', model_name='Team')
-        # my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
-        #
-        # for specialist in my_new_team:
-        #     specialisation = specialist.specialisation
-        #     required_filter = Q(address__city=specialist.city)
-        #     required_filter &= Q(status=specialist.status)
-        #     required_filter &= Q(qualify=specialist.qualify)
-        #     required_filter &= Q(specialisation__in=[specialisation])
-        #
-        #     # candidates = custom_user_model.objects.filter(required_filter)
-        #     filtered_candidates = custom_user_model.objects.filter(required_filter)
-        #     for allow in specialist.allow.all():
-        #         # required_filter &= Q(allow=allow)
-        #         filtered_candidates &= filtered_candidates.filter(allow=allow)
-        #         # candidates &= candidates.filter(allow=allow)
-        #     candidates |= filtered_candidates
-        #     Print.green("my_new_team",candidates.count())
-
-
-
-
-
-
-
-
-
-
-
-
-            # allow_filters = Q()
-            # required_filter &= Q(allow__id__contains=specialist.allow.all())
-            # allow_filters = Q(allow__id__in=[allow.id for allow in specialist.allow.all()])
-
-            # allow_filters &= Q(allow__id=allow_filters)
-
-            # for allow in specialist.allow.all():
-            #     required_filter &= Q(allow=allow)
-            # for allow in specialist.allow.all():
-            #     allow_filters &= Q(allow=allow)
-
-            # required_filter &= allow_filters
-
-
-        return 1
+        if candidates.count() == 0:  # Понижаем строгость фильтра, удобно для тестов, правила понижения мои субъективные,
+            # по этому могу здесь это сделать без универсальной логики
+            if qualify:
+                return self.filter_specialist(specialist, qualify=False)
+            elif status:
+                return self.filter_specialist(specialist, qualify=False, status=False)
+            elif allow:
+                return self.filter_specialist(specialist, qualify=False, status=False, allow=False)
+            elif spec:
+                return self.filter_specialist(specialist, qualify=False, status=False, allow=False, spec=False)
+            elif address:
+                return self.filter_specialist(specialist, qualify=False, status=False, allow=False, spec=False,
+                                              address=False)
+        return candidates
 
     @database_sync_to_async
     def set_status(self, read_ids):
@@ -477,7 +401,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         return unread_messages_count
 
     async def send_total_messages_notify(self, num):
-        await self.channel_layer.group_send(get_chat_channel_name(self.scope['user'].id), {
+        await self.channel_layer.group_send(get_chat_channel_name(self.scope['user']), {
             "type": 'send_notify',
             'notify_type': 'total_messages',
             'num': num,
@@ -506,8 +430,14 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         })
 
     async def send_notify_about_new_team(self, group_name):
+        Print.black(group_name)
+        # async_to_sync(self.channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
+
         await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_team', 'num': 1})
 
     async def send_notify(self, event):
-        Print.purpur(event)
+        Print.purpur(event["notify_type"],event["num"])
         await self.send(text_data=json.dumps({"num": event['num'], "type": event["notify_type"]}))
+        Print.purpur("Отправка произошла")
+
+

@@ -29,6 +29,9 @@ notifySocket.onmessage = function (event) {
     } else if (data.type === 'new_order') {
         console.log('Пришло уведомление о новом ордере', data.num);
         addNewOrder(data.num);
+    } else if (data.type === 'new_team') {
+        console.log('Пришло уведомление о новом ордере', data.num);
+        addNewTeam(data.num);
     }
 
 };
@@ -45,8 +48,7 @@ function addUnreadNum(count) {
 function addNewUnreadNum(count) {
     let usersContainer = document.getElementById('users');
     let currentCount = parseInt(usersContainer.textContent);
-    let newCount = currentCount + count;
-    usersContainer.textContent = newCount;
+    usersContainer.textContent = currentCount + count;
 }
 
 function addTotalOrders(count) {
@@ -57,6 +59,13 @@ function addTotalOrders(count) {
 function addNewOrder(count) {
     let usersContainer = document.getElementById('orders-total');
     let currentCount = parseInt(usersContainer.textContent);
-    let newCount = currentCount + count;
-    usersContainer.textContent = newCount;
+    usersContainer.textContent = currentCount + count;
+}
+
+function addNewTeam(count) {
+            console.log('Добавили новую команду', count);
+
+    // let usersContainer = document.getElementById('teams-total');
+    // let currentCount = parseInt(usersContainer.textContent);
+    // usersContainer.textContent = currentCount + count;
 }
