@@ -58,8 +58,8 @@ class EditUserForm(UserCreationForm):
 
         user.set_password(self.cleaned_data["password1"])
         if commit:
-            user.save()
-            self.save_m2m()
+            # user.save()
+            # self.save_m2m()
 
             specialisation = self.post.getlist('specialisation')
             allow = self.post.getlist('allow')
@@ -71,8 +71,14 @@ class EditUserForm(UserCreationForm):
             house_number = self.post['house_number']
             apartment = self.post['apartment']
             postal_code = self.post['postal_code']
+            # user.specialisation.clear()
+            # user.save()
             user.specialisation.add(*specialisation)
+            # user.allow.clear()
             user.allow.add(*allow)
+            # user.save()
+            # self.save_m2m()
+
 
             social_link = self.post.getlist('social_link')
             # social_indexes = [index + 1 for index, link in enumerate(social_link) if link]

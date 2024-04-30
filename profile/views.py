@@ -229,8 +229,11 @@ class UserUpdateView(UpdateView):
 
         except ValueError:
             qualify_obj = 0
+        user.specialisation.clear()
         user.specialisation.add(*specialisation)
+        user.allow.clear()
         user.allow.add(*allow)
+        user.social_list.clear()
         user.social_list.add(*social_indexes)
         user.save()
         # print("META", self.request.META)

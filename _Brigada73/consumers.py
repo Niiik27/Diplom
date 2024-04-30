@@ -4,13 +4,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.apps import apps
 import json
 
-
-from django.db.models import Count
+from django.db.models import Count, QuerySet
 from django.db import models
 from django.db.models import Q
 
 from Print import Print
-
 
 chat_users = set()
 online_users = set()
@@ -42,6 +40,8 @@ def get_order_channel_name(user):
     city = user.address.city.name
     city_translit = ''.join(translit_dict.get(c, c) for c in city)
     return f"orders_{city_translit}"
+
+
 @sync_to_async
 def get_team_channel_name(user):
     city = user.address.city.name
@@ -168,7 +168,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return unread_messages_count
 
     async def send_notify_about_new_message(self, channel_name):
-        await self.channel_layer.group_send(channel_name, { "type": 'send_notify','notify_type': 'new_msg','num': 1,})
+        await self.channel_layer.group_send(channel_name, {"type": 'send_notify', 'notify_type': 'new_msg', 'num': 1, })
+
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({"message": event["message"], 'status': event["status"],
                                               "sender_name": event["sender_name"], 'id': event["id"],
@@ -183,9 +184,9 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
         if not self.user.is_anonymous:
-            Print.purpur("Подключился пользователь из браузера",await self.get_status_name())
+            Print.purpur("Подключился пользователь из браузера", await self.get_status_name())
             user_status = await self.get_status_name()
-            if user_status == "Мастер":# Еще нужны оповещения для простых строителей. это все статусы до мастера.
+            if user_status == "Мастер":  # Еще нужны оповещения для простых строителей. это все статусы до мастера.
                 # Мастерам и доступна инфа о заказах но недоступна о бригадах.
                 # То есть они не могут наняться в бригаду в качестве работника. Они сами должжны создавать бригаду
                 Print.purpur("Мастер подключлся из браузера")
@@ -196,8 +197,8 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 )
                 online_users.add(group_name)
                 num = await self.get_total_orders()
-                await self.send_total_orders(group_name,num)
-            elif user_status not in ("Мастер", "Прораб", "Заказ"):#Все кроме этих должны узнать есть ли новые бригады
+                await self.send_total_orders(group_name, num)
+            elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
                 Print.purpur("Строитель подключлся из браузера")
                 group_name = await get_team_channel_name(self.user)
                 await self.channel_layer.group_add(
@@ -208,7 +209,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 num = await self.get_total_orders()
                 await self.send_total_orders(group_name, num)
 
-            #Сообщения будут доступны всем статусам
+            # Сообщения будут доступны всем статусам
             group_name = get_chat_channel_name(self.user.id)
             await self.channel_layer.group_add(
                 group_name,
@@ -222,9 +223,9 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             await self.accept()
 
 
-        else:#Анонимный пользователь получается из за питоновского клиента. его можно лишь подключить
+        else:  # Анонимный пользователь получается из за питоновского клиента. его можно лишь подключить
             Print.purpur("Подключился питонский клиент. Для того что бы разослать оповещение об обновлении модели")
-            await self.accept()#это выполнимо для обоих исходов  но так понятнее для кого подключениие
+            await self.accept()  # это выполнимо для обоих исходов  но так понятнее для кого подключениие
 
     async def disconnect(self, close_code):
         group_name = get_chat_channel_name(self.scope['user'].id)
@@ -245,7 +246,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 }))
                 num = await self.get_total_unread_num()
                 await self.send_total_messages_notify(num)
-        elif notify_type == 'from_server_notify_new_order':#Это приходит строго из питон клиента, это иммитация коннекта
+        elif notify_type == 'from_server_notify_new_order':  # Это приходит строго из питон клиента, это иммитация коннекта
             Print.purpur("Питонский клиент после подключения выслал свой id что бы авторизоваться рассылки ордеров")
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
@@ -259,8 +260,8 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             # num = await self.get_total_orders()
             Print.blue("Питонский клиент отправляет инфо о том что он увеличил количество заказов на 1")
             # await self.send_total_orders(group_name,num)
-            await self.send_notify_about_new_order(group_name)# Пусть клиент сам считает количество воходящих
-        elif notify_type == 'from_server_notify_new_team':#Это приходит строго из питон клиента, это иммитация коннекта
+            await self.send_notify_about_new_order(group_name)  # Пусть клиент сам считает количество воходящих
+        elif notify_type == 'from_server_notify_new_team':  # Это приходит строго из питон клиента, это иммитация коннекта
             Print.purpur("Питонский клиент после подключения выслал свой id что бы авторизоваться рассылки бригад")
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
@@ -271,7 +272,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 group_name,
                 self.channel_name
             )
-            num = await self.get_total_teams()
+            num = await self.filter_teams()
             Print.blue("Питонский клиент отправляет инфо о том что он увеличил количество бригад на 1")
             # await self.send_total_orders(group_name,num)
             # await self.send_notify_about_new_team(group_name)# Пусть клиент сам считает количество воходящих
@@ -280,6 +281,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     def get_status_name(self):
         # status_model = apps.get_model(app_label='profile', model_name='Status')
         return self.user.status.name
+
     @database_sync_to_async
     def get_user_by_id(self, user_id):
         custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
@@ -299,13 +301,12 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         return num_orders
 
     @database_sync_to_async
-    def get_total_teams(self):#Это вызовется когда я создам бригаду или отредактирую ее
-
-        #brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
+    def get_total_teams(self):  # Это вызовется когда я создам бригаду или отредактирую ее
+        # brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
         custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
-        team_model = apps.get_model(app_label='team', model_name='Team')#нахожу свою бригаду, она может быть только одна, для новой бригады требуется новый аккаунт
+        team_model = apps.get_model(app_label='team',
+                                    model_name='Team')  # нахожу свою бригаду, она может быть только одна, для новой бригады требуется новый аккаунт
         my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
-        # brigade_city = my_new_team.first().city
 
         for specialist in my_new_team:
             specialisation = specialist.specialisation
@@ -313,29 +314,20 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             candidate = custom_user_model.objects.filter(
                 # allow_filter,
                 address__city=specialist.city,
-                status = specialist.status,
-                qualify = specialist.qualify,
+                status=specialist.status,
+                qualify=specialist.qualify,
                 specialisation__in=[specialisation],
-                )
+            )
 
             for allow in specialist.allow.all():
                 candidate &= candidate.filter(allow=allow)
 
-
             print("my_new_team", candidate)
-
-
-
-
-
-
 
         # my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None).first()
         # specialisation = my_new_team.specialisation.specialisation
 
-
         # Получаем бригаду бригадира
-
 
         #     specialisations = my_new_team.specialisation
         #     Print.green("Удалось отфильтровать пользователей", specialisations.specialisation)
@@ -389,13 +381,82 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         #                         Print.purpur("Вообше исключили все фильтры")
         #                         new_teams = team_model.objects.all()
 
-
         # customer_ids = []
         # for team in new_teams:
         #     customer = team.customer
         #     if customer.address.city == self.user.address.city:
         #         customer_ids.append(customer)
         # num_orders = len(customer_ids)
+        return 1
+
+    @database_sync_to_async
+    def filter_teams(self):
+        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        candidates = custom_user_model.objects.none()
+        team_model = apps.get_model(app_label='team', model_name='Team')
+        my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
+        for specialist in my_new_team:
+            specialisation = specialist.specialisation
+            required_filter = Q(address__city=specialist.city)
+            required_filter &= Q(status=specialist.status)
+            required_filter &= Q(qualify=specialist.qualify)
+            required_filter &= Q(specialisation__in=[specialisation])
+            allowed_permissions = specialist.allow.all()
+            allowed_permission_ids = [permission.id for permission in allowed_permissions]
+            filtered_candidates = custom_user_model.objects.filter(required_filter)
+            for allow_id in allowed_permission_ids:
+                filtered_candidates = filtered_candidates.filter(allow__id=allow_id)
+            candidates |= filtered_candidates
+
+        print("my_new_team", candidates.count())
+
+
+        # custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        # candidates = custom_user_model.objects.none()
+        # team_model = apps.get_model(app_label='team', model_name='Team')
+        # my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
+        #
+        # for specialist in my_new_team:
+        #     specialisation = specialist.specialisation
+        #     required_filter = Q(address__city=specialist.city)
+        #     required_filter &= Q(status=specialist.status)
+        #     required_filter &= Q(qualify=specialist.qualify)
+        #     required_filter &= Q(specialisation__in=[specialisation])
+        #
+        #     # candidates = custom_user_model.objects.filter(required_filter)
+        #     filtered_candidates = custom_user_model.objects.filter(required_filter)
+        #     for allow in specialist.allow.all():
+        #         # required_filter &= Q(allow=allow)
+        #         filtered_candidates &= filtered_candidates.filter(allow=allow)
+        #         # candidates &= candidates.filter(allow=allow)
+        #     candidates |= filtered_candidates
+        #     Print.green("my_new_team",candidates.count())
+
+
+
+
+
+
+
+
+
+
+
+
+            # allow_filters = Q()
+            # required_filter &= Q(allow__id__contains=specialist.allow.all())
+            # allow_filters = Q(allow__id__in=[allow.id for allow in specialist.allow.all()])
+
+            # allow_filters &= Q(allow__id=allow_filters)
+
+            # for allow in specialist.allow.all():
+            #     required_filter &= Q(allow=allow)
+            # for allow in specialist.allow.all():
+            #     allow_filters &= Q(allow=allow)
+
+            # required_filter &= allow_filters
+
+
         return 1
 
     @database_sync_to_async
@@ -422,8 +483,6 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             'num': num,
         })
 
-
-
     async def chat_message(self, event):  # не удалять!!! это нужно для "type": message_type, имя метода = значению type
         pass
 
@@ -436,7 +495,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         })
 
     async def send_notify_about_new_order(self, group_name):
-        await self.channel_layer.group_send(group_name, {"type": 'send_notify','notify_type': 'new_order','num': 1})
+        await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_order', 'num': 1})
 
     async def send_total_teams(self, group_name, num):
 
@@ -445,9 +504,10 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             'notify_type': 'total_teams',
             'num': num,
         })
+
     async def send_notify_about_new_team(self, group_name):
-        await self.channel_layer.group_send(group_name, {"type": 'send_notify','notify_type': 'new_team','num': 1})
+        await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_team', 'num': 1})
+
     async def send_notify(self, event):
         Print.purpur(event)
         await self.send(text_data=json.dumps({"num": event['num'], "type": event["notify_type"]}))
-
