@@ -20,10 +20,10 @@ verbose_name = APP_NAMES.ORDERS[APP_NAMES.VERBOSE]
 class CreateTeamView(LoginRequiredMixin, TemplateView):
     model = Team
 
-    template_name = f'{APP_NAMES.TEAM[APP_NAMES.NAME]}/index.html'
+    template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/create.html'
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        context['page_style'] = APP_NAMES.TEAM[APP_NAMES.NAME]
+        context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
 
         return self.render_to_response(context)
 
@@ -54,7 +54,7 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
             if allowances is not None:
                 context['allowances'] = allowances
 
-        context['page_style'] = APP_NAMES.TEAM[APP_NAMES.NAME]
+        context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
         context['username'] = user.username
         return context
 
@@ -98,3 +98,20 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
         #     return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
         # return Response(status=status.HTTP_200_OK)  # Возвращаем успешный ответ
 
+
+
+class TeamsView(ListView):
+    model = Team
+    template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/team_list.html'
+    context_object_name = APP_NAMES.TEAM_LIST[APP_NAMES.NAME]
+    ordering = ['-timestamp']
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Team.objects.filter(brigadir__address__city=user.address.city)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_style'] = APP_NAMES.TEAM_LIST[APP_NAMES.NAME]
+        return context

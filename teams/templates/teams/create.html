@@ -2,11 +2,10 @@
 {% block content %}
 {% load static %}
 <main>
+    Страница бригад
     {% if user.status.name == 'Прораб' %}
     <h2>Создайте бригаду для заказа {{ order_customer.username }}</h2>
-    <!--    <form method="post" action="{% url 'team' username=user.username %}">-->
-    <!--        {% csrf_token %}-->
-    <div class="form-group" id="workers">
+        <div class="form-group" id="workers">
         <!-- Поля для первого специалиста -->
         <div class="worker">
             <select name="specialisation">
@@ -81,7 +80,9 @@
             // Отправка POST-запроса
             $.ajax({
                 type: "POST",
-                url: "{% url 'team' username=user.username %}",
+                // url: "{# url 'teams' username=user.username #}",
+
+                url: "{% url 'teams' %}",
                 data: { workers: JSON.stringify(requestData)},
                 headers: {
                     "X-CSRFToken": "{{ csrf_token }}"

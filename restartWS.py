@@ -1,9 +1,12 @@
 import os
 import subprocess
+import asyncio
+import time
+
 from sys import argv
 
 script, port = argv
-
+port = int(port)
 def update_requirements_file(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -37,14 +40,22 @@ def get_project_name():
             return os.path.basename(dirpath)
     raise FileNotFoundError("Файл settings.py не найден в текущем каталоге или его родительских каталогах.")
 
+
+
+# async def run_server(command):
+#     process = await asyncio.create_subprocess_shell(command)
+#     await process.communicate()
+
 project_name = get_project_name()
+
+
 print('Запускается ws сервер')
-subprocess.Popen(["daphne", f"{project_name}.asgi:application", "-b", "0.0.0.0", "-p", str(int(port) + 1)])
-print(f'ws сервер запущен на порте {str(int(port) + 1)}')
+subprocess.Popen(["daphne", f"{project_name}.asgi:application", "-b", "0.0.0.0", "-p", f"{port + 1}"])
+print(f'ws сервер запущен на порте {port + 1}')
 
 print(f'Запускается сервер Django на порте {port}')
 print(f"Адрес админки: http://127.0.0.1:{port}/admin/")
-subprocess.run(["py", "manage.py", "runserver", port])
+subprocess.run(["py", "manage.py", "runserver", f"{port}"])
 print('Cервер Django запущен')
 
 

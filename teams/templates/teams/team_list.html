@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+    Страница бригад
+    {% for team in team_list %}
+    <a href="{% url 'profile' team.brigadir.username %}">
+        <p>Бригада: {{ team.brigadir.username }}</p>
+        <p>Должность: {{ team.specialisation.specialisation }}</p>
+        <p>Статус: {{ team.status.name }}</p>
+        <p>Оплата: {{ team.qualify.name }}</p>
+<p>Разрешения:
+            {% for allow in team.allow.all %}
+                {{ allow.allow }}
+            {% endfor %}
+        </p>
+    </a>
+    {% endfor %}
+    {% endblock content%}
+</main>

@@ -14,7 +14,7 @@ class Team(models.Model):
                                 blank=True, )
     city = models.ForeignKey(City, verbose_name="Город", on_delete=models.DO_NOTHING, null=True, blank=True,)
     allow = models.ManyToManyField(Allowance, verbose_name='Разрешения', blank=True)
-    confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества",default=False)
+    timestamp = models.DateTimeField(verbose_name='Время', auto_now_add=True)
 
 
     def __str__(self):

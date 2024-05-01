@@ -12,7 +12,7 @@ from django.views.generic import CreateView, UpdateView, TemplateView, ListView,
 from Print import Print
 from _Brigada73.socket_client import SOCKET
 from orders.models import Order
-from team.models import Team
+from teams.models import Team
 from .forms import *
 from .models import CustomUser
 
@@ -30,28 +30,28 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(context)
         user = self.request.user
         context['user'] = user
-        user_social_profiles = UserSocial.objects.filter(user=self.request.user)
-        social_list = SocialList.objects.all()
-        if user.status_id != len(Status.objects.all()):
-            sl_res = {}
-            for i in range(len(social_list)):
-                social_name = social_list[i].name
-                social_ico = social_list[i].icon_path
-                for j in range(len(user_social_profiles)):
-                    profile = user_social_profiles[j]
-                    if len(profile.link) > 0:
-                        if profile.social_id == i + 1:
-                            sl_res[social_name] = social_ico, profile.link
-                            break
-
-            context['social_list'] = sl_res
-
         profile_user = context['object']
+        user_social_profiles = UserSocial.objects.filter(user=profile_user)
+        social_list = SocialList.objects.all()
         if profile_user.status:
-            print(profile_user.status)
+            if profile_user.status.name != "Заказ":
+                sl_res = {}
+                for i in range(len(social_list)):
+                    social_name = social_list[i].name
+                    social_ico = social_list[i].icon_path
+                    for j in range(len(user_social_profiles)):
+                        profile = user_social_profiles[j]
+                        if len(profile.link) > 0:
+                            if profile.social_id == i + 1:
+                                sl_res[social_name] = social_ico, profile.link
+                                break
+
+                context['social_list'] = sl_res
+
+
+        if profile_user.status:
             if profile_user.status.name == 'Заказ':
                 order = Order.objects.get(customer=profile_user)
                 if order is not None:
@@ -71,24 +71,24 @@ class ProfileView(LoginRequiredMixin, DetailView):
                     #     context['city'] = team.city
                     #     context['allow'] = team.allow
                     #     context['confirmed'] = team.confirmed
-            #     order = Order.objects.get(master=profile_user)
-            #     if order is not None:
-            #         context['order_customer'] = order.customer
-            #     statuses = Status.objects.exclude(name__in=['Прораб', 'Заказ','Мастер'])
-            #     if statuses is not None:
-            #         context['statuses'] = statuses
-            #     specialisations = Specialisations.objects.all()
-            #     if specialisations is not None:
-            #         context['specialisations'] = specialisations
-            #     qualifyes = Qualify.objects.all()
-            #     if qualifyes is not None:
-            #         context['qualifies'] = qualifyes
-            #     cities = City.objects.all()
-            #     if cities is not None:
-            #         context['cities'] = cities
-            #     allowances = Allowance.objects.all()
-            #     if allowances is not None:
-            #         context['allowances'] = allowances
+                # order = Order.objects.get(master=profile_user)
+                # if order is not None:
+                #     context['order_customer'] = order.customer
+                # statuses = Status.objects.exclude(name__in=['Прораб', 'Заказ','Мастер'])
+                # if statuses is not None:
+                #     context['statuses'] = statuses
+                # specialisations = Specialisations.objects.all()
+                # if specialisations is not None:
+                #     context['specialisations'] = specialisations
+                # qualifyes = Qualify.objects.all()
+                # if qualifyes is not None:
+                #     context['qualifies'] = qualifyes
+                # cities = City.objects.all()
+                # if cities is not None:
+                #     context['cities'] = cities
+                # allowances = Allowance.objects.all()
+                # if allowances is not None:
+                #     context['allowances'] = allowances
 
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
@@ -186,7 +186,6 @@ class UserUpdateView(UpdateView):
     def post(self, request, *args, **kwargs):
         user = self.request.user
         # user_id = user.pk
-        # print("self.request", dir(self.request))
         # user = get_object_or_404(CustomUser, pk=user_id)
         # if request.POST:
         # password1 = request.POST['password1']
@@ -236,12 +235,8 @@ class UserUpdateView(UpdateView):
         user.social_list.clear()
         user.social_list.add(*social_indexes)
         user.save()
-        # print("META", self.request.META)
-        # print("COOKIES", self.request.COOKIES)
-        Print.blue("Сохранение профиля в процессе")
 
         if user.status.name == 'Заказ':
-            Print.blue("Обновление уведомления о заказе")
             order, created = Order.objects.get_or_create(customer=user)
             ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
             ws.connect()

@@ -10,6 +10,7 @@ from django.db.models import Count, QuerySet
 from django.db import models
 from django.db.models import Q
 
+import APP_NAMES
 from Print import Print
 
 chat_users = set()
@@ -34,9 +35,11 @@ translit_dict = {
 
 
 def get_chat_channel_name(user):
-    return f"{user.username}_{user.id}"
+    user_translit = ''.join(translit_dict.get(c, c) for c in user.username)
+    return f"{user_translit}_{user.id}"
 def build_chat_channel_name(username, user_id):
-    return f"{username}_{user_id}"
+    user_translit = ''.join(translit_dict.get(c, c) for c in username)
+    return f"{user_translit}_{user_id}"
 
 
 def get_spec_channel_name(spec):
@@ -76,7 +79,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
-        print("self.scope", self.scope)
         message_type = text_data_json['type']
 
         content = text_data_json['message']
@@ -110,19 +112,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_by_id(self, user_id):
-        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
         return custom_user_model.objects.get(pk=user_id)
 
     @database_sync_to_async
     def save_message(self, sender, receiver, content):
-        message_model = apps.get_model(app_label='message', model_name='Message')
+        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
         msg = message_model(sender=sender, receiver=receiver, content=content)
         msg.save()
         return msg.id
 
     @database_sync_to_async
     def get_messages(self, sender, receiver):
-        message_model = apps.get_model(app_label='message', model_name='Message')
+        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
         messages = message_model.objects.filter(
             (Q(sender=sender) & Q(receiver=receiver)) | (Q(sender=receiver) & Q(receiver=sender))).order_by('timestamp')
         messages_data = []
@@ -170,7 +172,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_total_unread_num(self):
         me = self.scope['user']
-        message_model = apps.get_model(app_label='message', model_name='Message')
+        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
         unread_messages = message_model.objects.filter(receiver=me, status=False)
         unread_messages_count = unread_messages.count()
         return unread_messages_count
@@ -192,32 +194,26 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
         if not self.user.is_anonymous:
-            Print.purpur("Подключился пользователь из браузера", await self.get_status_name())
+
             user_status = await self.get_status_name()
             channel_name = self.channel_name
             online_users[self.user.id] = channel_name
 
-            if user_status == "Мастер":  # Еще нужны оповещения для простых строителей. это все статусы до мастера.
-                # Мастерам и доступна инфа о заказах но недоступна о бригадах.
-                # То есть они не могут наняться в бригаду в качестве работника. Они сами должжны создавать бригаду
-                Print.purpur("Мастер подключлся из браузера")
+            if user_status == "Мастер":
                 group_name = await get_order_channel_name(self.user)
                 await self.channel_layer.group_add(
                     group_name,
                     channel_name
                 )
-                # online_users.add(group_name)
+
                 num = await self.get_total_orders()
                 await self.send_total_orders(group_name, num)
             elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
-                Print.purpur("Строитель подключлся из браузера")
                 group_name = await get_team_channel_name(self.user)
-                Print.yellow(group_name)
                 await self.channel_layer.group_add(
                     group_name,
                     channel_name
                 )
-                # online_users.add(group_name)
                 num = await self.get_total_teams()
                 await self.send_total_teams(group_name, num)
 
@@ -227,17 +223,10 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 group_name,
                 channel_name
             )
-            # online_users.add(group_name)
-
             num = await self.get_total_unread_num()
-            Print.yellow(num)
             await self.send_total_messages_notify(num)
-            await self.accept()
 
-
-        else:  # Анонимный пользователь получается из за питоновского клиента. его можно лишь подключить
-            Print.purpur("Подключился питонский клиент. Для того что бы разослать оповещение об обновлении модели")
-            await self.accept()  # это выполнимо для обоих исходов  но так понятнее для кого подключениие
+        await self.accept()  # это выполнимо для обоих исходов  но так понятнее для кого подключениие
 
     async def disconnect(self, close_code):
         if not self.user.is_anonymous:
@@ -246,7 +235,6 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
-        Print.green("text_data_jsontext_data_jsontext_data_json", text_data_json)
         notify_type = text_data_json['type']
         if notify_type == 'read_report':
             read_ids = text_data_json['read_ids']
@@ -259,25 +247,19 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 num = await self.get_total_unread_num()
                 await self.send_total_messages_notify(num)
         elif notify_type == 'from_server_notify_new_order':  # Это приходит строго из питон клиента, это иммитация коннекта
-            Print.purpur("Питонский клиент после подключения выслал свой id что бы авторизоваться рассылки ордеров")
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
-            Print.purpurs("Теперь он", self.user)
             group_name = await get_order_channel_name(self.user)
-            Print.purpur("И он находится в групппе", group_name)
             await self.channel_layer.group_add(
                 group_name,
                 self.channel_name
             )
             # num = await self.get_total_orders()
-            Print.blue("Питонский клиент отправляет инфо о том что он увеличил количество заказов на 1")
             # await self.send_total_orders(group_name,num)
             await self.send_notify_about_new_order(group_name)  # Пусть клиент сам считает количество воходящих
         elif notify_type == 'from_server_notify_new_team':  # Это приходит строго из питон клиента, это иммитация коннекта
-            Print.purpur("Питонский клиент после подключения выслал свой id что бы авторизоваться рассылки бригад")
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
-            Print.purpurs("Теперь он", self.user)
             # group_name = get_spec_channel_name(self.user)
             # Print.purpur("И он находится в групппе", group_name)
             # await self.channel_layer.group_add(
@@ -286,7 +268,6 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             # )
             num = await self.filter_teams()
             # await self.send_notify_about_new_team(group_name)
-            Print.blue("Питонский клиент отправляет инфо о том что он увеличил количество бригад на 1")
             # await self.send_total_orders(group_name,num)
             # await self.send_notify_about_new_team(group_name)# Пусть клиент сам считает количество воходящих
 
@@ -297,13 +278,13 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_by_id(self, user_id):
-        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
         return custom_user_model.objects.get(pk=user_id)
 
     @database_sync_to_async
     def get_total_orders(self):
 
-        order_model = apps.get_model(app_label='orders', model_name='Order')
+        order_model = apps.get_model(app_label=APP_NAMES.ORDERS[APP_NAMES.NAME], model_name='Order')
         new_orders = order_model.objects.filter(confirmed=False)
         customer_ids = []
         for order in new_orders:
@@ -315,7 +296,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_total_teams(self):  # Это вызовется когда я создам бригаду или отредактирую ее
-        team_model = apps.get_model(app_label='team', model_name='Team')
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
         # brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
         my_new_team = team_model.objects.filter(
             city=self.user.address.city,
@@ -327,7 +308,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def filter_teams(self):
         candidates = None
-        team_model = apps.get_model(app_label='team', model_name='Team')
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
         my_new_team = team_model.objects.filter(brigadir=self.user, coworker=None)
 
         for specialist in my_new_team:
@@ -338,18 +319,16 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             for member in candidates:
                 channel_name = online_users.get(member.id)
                 if channel_name is not None:
-                    print("Пытаемся получить имя канала кандидата",channel_name)
                     async_to_sync(self.channel_layer.group_add)(group_name, channel_name)
 
             # async_to_sync(self.send_notify_about_new_team)(group_name)
-            print("Канал кандидата", group_name)
             # async_to_sync(channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
             async_to_sync(self.send_notify_about_new_team)(group_name)
         return candidates
 
     # @database_sync_to_async
     def filter_specialist(self, specialist, qualify=True, status=True, spec=True, allow=True, address=True):
-        custom_user_model = apps.get_model(app_label='profile', model_name='CustomUser')
+        custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
         candidates = custom_user_model.objects.none()
         specialisations = specialist.specialisation
         if address: required_filter = Q(address__city=specialist.city)
@@ -386,7 +365,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def set_status(self, read_ids):
         try:
-            message_model = apps.get_model(app_label='message', model_name='Message')
+            message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
             message_model.objects.filter(id__in=read_ids).update(status=True)
             return True
         except Exception as e:
@@ -395,7 +374,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_total_unread_num(self):
         me = self.scope['user']
-        message_model = apps.get_model(app_label='message', model_name='Message')
+        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
         unread_messages = message_model.objects.filter(receiver=me, status=False)
         unread_messages_count = unread_messages.count()
         return unread_messages_count
@@ -430,14 +409,11 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         })
 
     async def send_notify_about_new_team(self, group_name):
-        Print.black(group_name)
         # async_to_sync(self.channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
 
         await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_team', 'num': 1})
 
     async def send_notify(self, event):
-        Print.purpur(event["notify_type"],event["num"])
         await self.send(text_data=json.dumps({"num": event['num'], "type": event["notify_type"]}))
-        Print.purpur("Отправка произошла")
 
 

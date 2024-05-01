@@ -4,48 +4,48 @@
 <main>
     <h1 class="head_1">
         {% if profile_user %}
-        {% if profile_user.status %}
-        {{ profile_user.status }}
-        {% endif %}
-        {% if profile_user.first_name %}
-        {{ profile_user.first_name }}
-        {% endif %}
-        {% if profile_user.last_name %}
-        {{ profile_user.last_name }}
-        {% endif %}
+            {% if profile_user.status %}
+                {{ profile_user.status }}
+            {% endif %}
+            {% if profile_user.first_name %}
+                {{ profile_user.first_name }}
+            {% endif %}
+            {% if profile_user.last_name %}
+                {{ profile_user.last_name }}
+            {% endif %}
         {% endif %}
     </h1>
     <p>
         {% if profile_user.birth %}
-        {% if user.status.name != 'Заказ' %}
-        Дата рождения:
-        {% else %}
-        Выполнить до:
-        {% endif %}
-        {{ profile_user.birth }}
+            {% if user.status.name != 'Заказ' %}
+                Дата рождения:
+            {% else %}
+                Выполнить до:
+            {% endif %}
+            {{ profile_user.birth }}
         {% endif %}
 
         {% if profile_user.email %}
-        Почта: {{ profile_user.email }}
+            Почта: {{ profile_user.email }}
         {% endif %}
 
         {% if profile_user.user_contacts.phone %}
-        Телефон: {{ profile_user.user_contacts.phone }}
+            Телефон: {{ profile_user.user_contacts.phone }}
         {% endif %}
     </p>
     <div>
         {% if profile_user.user_contacts.phone %}
-        {% if profile_user.user_contacts.messenger.all %}
-        <h2>{{ profile_user.user_contacts.phone }}:</h2>
-        <ul>
-            {% for messenger in profile_user.user_contacts.messenger.all %}
-            <li>
-                <img src="{% static messenger.icon_path %}" alt=messenger.name width="50" height="50">
-                {{ messenger.name }}
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+            {% if profile_user.user_contacts.messenger.all %}
+                <h2>{{ profile_user.user_contacts.phone }}:</h2>
+                <ul>
+                    {% for messenger in profile_user.user_contacts.messenger.all %}
+                        <li>
+                            <img src="{% static messenger.icon_path %}" alt=messenger.name width="50" height="50">
+                            {{ messenger.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         {% endif %}
         <div class="userlinks">
             <form id="new_img_form"
@@ -53,208 +53,152 @@
                   enctype="multipart/form-data" style="display: flex">
                 {% csrf_token %}
                 <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
-
                 <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">
-                    {% if user.id != profile_user.id %} Написать в чат {% else %}Сделать заметку{% endif %}
-
-                </button>
+                    {% if user.id != profile_user.id %} Написать в чат {% else %}Сделать заметку{% endif %}</button>
             </form>
             {% if profile_user.status.name != 'Заказ' %}
-            {% if user.id != profile_user.id %}
-            <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+                {% if user.id != profile_user.id %}
+                    <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+                {% endif %}
             {% endif %}
         </div>
-        {% endif %}
     </div>
-    {%
-    if profile_user.address.city or profile_user.address.district or profile_user.address.street or
-    profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code
-    %}
-    <h2>Адрес:</h2>
-    <ul>
-        {% if profile_user.address.city %}
-        <li>Город: {{ profile_user.address.city }}</li>
-        {% endif %}
-        {% if profile_user.address.district %}
-        <li>Район: {{ profile_user.address.district }}</li>
-        {% endif %}
-        {% if profile_user.address.street %}
-        <li>Улица: {{ profile_user.address.street }}</li>
-        {% endif %}
-        {% if profile_user.address.house_number %}
-        <li>Номер дома: {{ profile_user.address.house_number }}</li>
-        {% endif %}
-        {% if profile_user.address.apartment %}
-        <li>Квартира: {{ profile_user.address.apartment }}</li>
-        {% endif %}
-        {% if profile_user.address.postal_code %}
-        <li>Индекс: {{ profile_user.address.postal_code }}</li>
-        {% endif %}
-    </ul>
+    {% if profile_user.address.city or profile_user.address.district or profile_user.address.street or
+    profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code %}
+        <h2>Адрес:</h2>
+        <ul>
+            {% if profile_user.address.city %}
+                <li>Город: {{ profile_user.address.city }}</li>
+            {% endif %}
+            {% if profile_user.address.district %}
+                <li>Район: {{ profile_user.address.district }}</li>
+            {% endif %}
+            {% if profile_user.address.street %}
+                <li>Улица: {{ profile_user.address.street }}</li>
+            {% endif %}
+            {% if profile_user.address.house_number %}
+                <li>Номер дома: {{ profile_user.address.house_number }}</li>
+            {% endif %}
+            {% if profile_user.address.apartment %}
+                <li>Квартира: {{ profile_user.address.apartment }}</li>
+            {% endif %}
+            {% if profile_user.address.postal_code %}
+                <li>Индекс: {{ profile_user.address.postal_code }}</li>
+            {% endif %}
+        </ul>
     {% endif %}
     {% if profile_user.qualify %}
-    <h2>{% if request.user.status.name != 'Заказ' %}Квалификация: {% else %}Оплата:{% endif %}</h2>
-    <p>{{ profile_user.qualify }}</p>
+        <h2>{% if request.user.status.name != 'Заказ' %}Квалификация: {% else %}Оплата:{% endif %}</h2>
+        <p>{{ profile_user.qualify }}</p>
     {% endif %}
     {% if profile_user.about %}
-    <h2> {% if request.user.status.name != 'Заказ' %}О себе: {% else %}Требуется:{% endif %}</h2>
-    <p>{{ profile_user.about }}</p>
+        <h2> {% if request.user.status.name != 'Заказ' %}О себе: {% else %}Требуется:{% endif %}</h2>
+        <p>{{ profile_user.about }}</p>
     {% endif %}
-    {% if request.user.status.name != 'Заказ' %}
-    {% if specialization %}
-    <h2>Специализации:</h2>
-    <ul>
-        {% for specialization in profile_user.specialisation.all %}
-        <li>{{ specialization }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% if allowance %}
-    <h2>Разрешения:</h2>
-    <ul>
-        {% for allowance in profile_user.allow.all %}
-        <li>{{ allowance }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% if social_list.items %}
-    <h2>Соцсети:</h2>
-    <ul>
-        {% for key,value in social_list.items %}
-        <li>
-            <img src="{% static value.0 %}" alt=key width="50" height="50">
-            {{ key }} <a href="{{ value.1 }}">{{ value.1 }}</a>
+    {% if profile_user.status.name != 'Заказ' %}
+        <h2>Специализации:</h2>
+        <ul>
+            {% for specialization in profile_user.specialisation.all %}
+                <li>{{ specialization }}</li>
+            {% endfor %}
+        </ul>
 
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    {% if profile_user.fine.all %}
-    <h2>Замечания:</h2>
-    <ul>
-        {% for fine in profile_user.fine.all %}
-        <li>{{ fine.fine }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <!--    <form method="POST" action="{% url 'take' customer=profile_user.username %}">-->
-    <!--        {% csrf_token %}-->
-    <!--        <input type="hidden" name="customer_id" value="{{ profile_user.id }}">-->
-    <!--        <button type="submit">Взять заказ</button>-->
-    <!--    </form>-->
-    {% if user.status.name == 'Мастер' and profile_user.status.name == 'Заказ' %}
-    {% if order_master %}
-    <div>Заказ в работе</div>
+        <h2>Разрешения:</h2>
+        <ul>
+            {% for allowance in profile_user.allow.all %}
+                <li>{{ allowance }}</li>
+            {% endfor %}
+        </ul>
+
+        {% if social_list.items %}
+            <h2>Соцсети:</h2>
+            <ul>
+                {% for key,value in social_list.items %}
+                    <li>
+                        <img src="{% static value.0 %}" alt=key width="50" height="50">
+                        {{ key }} <a href="{{ value.1 }}">{{ value.1 }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if profile_user.fine.all %}
+            <h2>Замечания:</h2>
+            <ul>
+                {% for fine in profile_user.fine.all %}
+                <li>{{ fine.fine }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if profile_user.status.name == 'Прораб' %}
+            <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
+        {% endif %}
+
     {% else %}
-    <button id="sendButton">Взять заказ</button>
-    {% endif %}
-    {% else %}
-    {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
-    {% if order_master %}
-    {% if order_master == user %}
-    <div>Вы прораб на этом объекте</div>
-    {% endif %}
-    {% endif %}
-    {% endif %}
-    {% endif %}
+        {% if user.status.name == 'Мастер' and profile_user.status.name == 'Заказ' %}
+            {% if order_master %}
+                <div>Заказ в работе</div>
+            {% else %}
+                <button id="sendButton">Взять заказ</button>
+            {% endif %}
 
-    {% if user == profile_user %}
-    {% if user.status.name == 'Прораб' %}
-    {% url 'team' username=user.username %}
-    <h2><a href="{% url 'team' username=user.username %}">У Вас есть заказ {{ order_customer.username }}. Вы должны
-        создать свою бригаду:</a></h2>
-    <h2>Бригада</h2>
-    <br>
-        <p>Бригадир: {{ team.brigadir }}</p>
-    <p>Заказ: {{ order_customer.username }}</p>
-    <br>
-    {% for team in teams %}
-
-
-    <p>Специализация: {{ team.specialisation }}</p>
-    <p>Статус: {{ team.status }}</p>
-    <p>Квалификация: {{ team.qualify }}</p>
-<!--    <p>Город: {{ team.city }}</p>-->
-    <h3>Разрешения:</h3>
-    <ul>
-        {% for allow in team.allow.all %}
-        <li>{{ allow }}</li>
-        {% endfor %}
-    </ul>
-    <p>Подтверждение сотрудничества: {{ team.confirmed }}</p>
-    <br>
-    {% endfor %}
+            {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
+                {% if order_master %}
+                    {% if order_master == user %}
+                        <div>Вы прораб на этом объекте</div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+        {% if user == profile_user %}
+            {% if user.status.name == 'Прораб' %}
+                <h2><a href="{% url 'teams' username=user.username %}">У Вас есть заказ {{ order_customer.username }}. Вы должны
+                    создать свою бригаду:</a></h2>
+                <h2>Бригада</h2>
+                <br>
+                    <p>Бригадир: {{ teams.brigadir }}</p>
+                <p>Заказ: {{ order_customer.username }}</p>
+                <br>
+                {% for teams in teams %}
+                    <p>Специализация: {{ teams.specialisation }}</p>
+                    <p>Статус: {{ teams.status }}</p>
+                    <p>Квалификация: {{ teams.qualify }}</p>
+                    <h3>Разрешения:</h3>
+                    <ul>
+                        {% for allow in teams.allow.all %}
+                            <li>{{ allow }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p>Подтверждение сотрудничества: {{ teams.confirmed }}</p>
+                    <br>
+                {% endfor %}
+            {% endif %}
+        {% else %}
+            {% if user.status.name != 'Мастер' and user.status.name != 'Прораб' and user.status.name != 'Заказ' %}
+                {% if profile_user.status.name == 'Прораб' %}
+                    <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
+                {% endif %}
+            {% endif %}
+        {% endif %}
     {% endif %}
-    {% endif %}
-
 </main>
-{% endif %}
+
 
 
 {% if request.user.status.name == 'Мастер' %}
 <script>
-
-    //Тут запрос на подмену кнопки
-    $(document).ready(function () {
-        $("#sendButton").click(function () {
-            let requestData = {
-                customer_id: "{{ profile_user.id }}",
-            };
-
-            // Отправка POST-запроса
-            $.ajax({
-                type: "POST",
-                url: "{% url 'take' customer=profile_user.username %}",
-                data: requestData,
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                success: function (response) {
-                    console.log("Запрос успешно отправлен:", response);
-                    $("#sendButton").hide();
-                    let newTextElement = $("<p>Заказ в работе</p>");
-                    $("#sendButton").after(newTextElement);
-                },
-                error: function (xhr, status, error) {
-                    console.error("Произошла ошибка:", error);
-                }
-            });
-        });
-    });
-
-    //Дальше сокеты
-//     const orderSocket = new WebSocket('ws://127.0.0.1:8002/ws/order/');
-//
-//     orderSocket.onopen = function () {
-//         console.log('orderSocket connection established.');
-// // requestTotalNotify();
-//     };
-//     orderSocket.onclose = function () {
-//         console.log('orderSocket connection closed.');
-//     };
-//
-//     orderSocket.onmessage = function (event) {
-//         console.log('orderSocket onmessage');
-//         let data = JSON.parse(event.data);
-//         if (data.type === 'total_orders') {
-//             console.log('orderSocket onmessage', data.num);
-//             addOrdersNum(data.num);
-//         }
-//     };
-
-    // function requestTotalNotify() {
-    //     notifySocket.send(JSON.stringify({'type': 'total'}));
-    // }
-
-    // function addOrdersNum(count) {
-    //     let usersContainer = document.getElementById('orders-total');
-    //     usersContainer.textContent = count;
-    // }
+    const cust_id = "{{ profile_user.id }}";
+    const take_url = "{% url 'take' customer=profile_user.username %}";
+    const token = "{{ csrf_token }}";
 </script>
+<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
 {% else %}
-<script src = "{% static '' %}{{ page_style }}/js/script.js">
-
+<script>
+    const cust_id = "";
+    const take_url = "";
+    const token = "";
 </script>
+<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
 {% endif %}
 {% endblock %}
 
