@@ -95,7 +95,7 @@
         <h2> {% if request.user.status.name != 'Заказ' %}О себе: {% else %}Требуется:{% endif %}</h2>
         <p>{{ profile_user.about }}</p>
     {% endif %}
-    {% if profile_user.status.name != 'Заказ' %}
+    {% if profile_user.status.name != 'Заказ' %} f
         <h2>Специализации:</h2>
         <ul>
             {% for specialization in profile_user.specialisation.all %}
@@ -134,22 +134,8 @@
             <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
         {% endif %}
 
-    {% else %}
-        {% if user.status.name == 'Мастер' and profile_user.status.name == 'Заказ' %}
-            {% if order_master %}
-                <div>Заказ в работе</div>
-            {% else %}
-                <button id="sendButton">Взять заказ</button>
-            {% endif %}
 
-            {% if user.status.name == 'Прораб' and profile_user.status.name == 'Заказ' %}
-                {% if order_master %}
-                    {% if order_master == user %}
-                        <div>Вы прораб на этом объекте</div>
-                    {% endif %}
-                {% endif %}
-            {% endif %}
-        {% endif %}
+    <br>
         {% if user == profile_user %}
             {% if user.status.name == 'Прораб' %}
                 <h2><a href="{% url 'teams' username=user.username %}">У Вас есть заказ {{ order_customer.username }}. Вы должны
@@ -180,6 +166,23 @@
                 {% endif %}
             {% endif %}
         {% endif %}
+    {% else %}
+        {% if user.status.name == 'Мастер' or profile_user.status.name == 'Заказ' %}
+            {% if order_master %}
+                <div>Заказ в работе</div>
+            {% else %}
+                <button id="sendButton">Взять заказ</button>
+            {% endif %}
+
+            {% if user.status.name == 'Прораб' or profile_user.status.name == 'Заказ' %}
+                {% if order_master %}
+                    {% if order_master == user %}
+                        <div>Вы прораб на этом объекте</div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+
     {% endif %}
 </main>
 

@@ -1,0 +1,29 @@
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Стили для ячеек заголовков */
+th {
+    background-color: #696969; /* Цвет фона */
+    border: 1px solid #ddd; /* Граница */
+    padding: 8px; /* Отступ внутри ячейки */
+    text-align: left; /* Выравнивание текста */
+    color: black;
+}
+
+/* Стили для ячеек данных */
+td {
+    border: 1px solid #ddd; /* Граница */
+    padding: 8px; /* Отступ внутри ячейки */
+    text-align: left; /* Выравнивание текста */
+}
+tr:has(td.empty-coworker:empty){
+    background-color: #5d2626; /* Красный цвет фона */
+}
+/* Стили для четных строк */
+tbody tr:nth-child(even) {
+    /*background-color: #363434; !* Цвет фона *!*/
+    background-color: #414040;
+}

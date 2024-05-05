@@ -35,6 +35,9 @@ notifySocket.onmessage = function (event) {
     }else if (data.type === 'new_team') {
         console.log('Пришло уведомление о новой бригаде', data.num);
         addNewTeam(data.num);
+    }else if (data.type === 'team_complete') {
+        console.log('Бригада укомплектована', data.num);
+        teamComplete(data.num);
     }
 
 };
@@ -76,4 +79,17 @@ function addNewTeam(count) {
     let usersContainer = document.getElementById('teams-total');
     let currentCount = parseInt(usersContainer.textContent);
     usersContainer.textContent = currentCount + count;
+}
+
+function teamComplete(count) {
+    console.log('Бригада укомплектована', count);
+    let usersContainer = document.getElementById('team-complete');
+    if(count === 0)
+    {
+        usersContainer.textContent = "Бригада укомплектована"
+    }
+    else
+    {
+        usersContainer.textContent = `О бригаде ${count}`
+    }
 }

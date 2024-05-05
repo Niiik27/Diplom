@@ -40,5 +40,8 @@ class SOCKET:
         data = {"type": notify_type, "message": message, 'user_id': self.user_id}
         self.ws.send(json.dumps(data))
 
+    def send_notify_dara(self, **kwargs):
+        self.ws.send(json.dumps(kwargs))
+
     def on_error(self, error:TypeError, *args, **kwargs):
         Print.red("py client error:", error)

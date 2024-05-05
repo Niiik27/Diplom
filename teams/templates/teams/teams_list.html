@@ -2,19 +2,28 @@
 {% block content %}
 {% load static %}
 <main>
-    Страница бригад
+    <h3>Свободные вакансии</h3>
     {% for team in team_list %}
     <a href="{% url 'profile' team.brigadir.username %}">
         <p>Бригада: {{ team.brigadir.username }}</p>
         <p>Должность: {{ team.specialisation.specialisation }}</p>
         <p>Статус: {{ team.status.name }}</p>
         <p>Оплата: {{ team.qualify.name }}</p>
-<p>Разрешения:
+        <p>Разрешения:
             {% for allow in team.allow.all %}
                 {{ allow.allow }}
             {% endfor %}
         </p>
     </a>
+        <button class="sendButton" data-team-id="{{ team.id }}">Вступить в бригаду</button>
+
     {% endfor %}
-    {% endblock content%}
+
+    <br>
 </main>
+<script>
+    const take_url = "{% url 'join_team' user.username %}";
+    const token = "{{ csrf_token }}";
+</script>
+<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
+    {% endblock content%}

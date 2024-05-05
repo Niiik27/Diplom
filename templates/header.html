@@ -23,10 +23,22 @@
                     {% else %}
                         <a href="{% url 'team_list'  %}">Заказы <span id="teams-total">0</span></a>
                     {% endif %}
+                {% else %}
+                    {% if request.user.status.name == 'Заказ' %}
+                        {% if page_style != 'team_view' %}
+                            <a href="{% url 'team_view' order_master.username %}" id="team-complete">Бригада</a>
+                        {% endif %}
+                    {% else %}
+                        {% if request.user.status.name == 'Прораб' %}
+                            {% if page_style != 'team_view' %}
+                                <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+
                 {% endif %}
             {% endif %}
         </div>
-
 
         <div id="menu">
             {% if user.is_authenticated == False %}
@@ -58,7 +70,7 @@
 
     {% if user.is_authenticated %}
 
-    <script src="{% static 'base/js/script.js' %}"></script>
+        <script src="{% static 'base/js/script.js' %}"></script>
 
     {% endif %}
 </header>

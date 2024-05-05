@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main>
+    <h2>Просмотр бригады</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Специализация</th>
+                <th>Имя сотрудника</th>
+                <th>Статус</th>
+                <th>Квалификация</th>
+                <th>Разрешения</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for specialisation in team %}
+                <tr>
+                    <td>{{ specialisation.specialisation }}</td>
+                    <td class="empty-coworker">{{ specialisation.coworker.username }}</td>
+                    <td>{{ specialisation.status }}</td>
+                    <td>{{ specialisation.qualify }}</td>
+                    <td>
+                        <ul>
+                            {% for allow in specialisation.allow.all %}
+                                <li>{{ allow.allow }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+<script>
+    const take_url = "{% url 'join_team' user.username %}";
+    const token = "{{ csrf_token }}";
+</script>
+<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
+    {% endblock content%}

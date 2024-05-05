@@ -1,9 +1,8 @@
 import json
+from django.shortcuts import get_object_or_404
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from django.views.generic import ListView, View, DetailView, TemplateView
 from django.http import JsonResponse
 
@@ -98,20 +97,127 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
         #     return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
         # return Response(status=status.HTTP_200_OK)  # Возвращаем успешный ответ
 
+class JoinTeamView(LoginRequiredMixin, TemplateView):
+    model = Team
+    def post(self, request, *args, **kwargs):
+        team_id = request.POST.get('team_id')
+        if team_id:
+            Print.yellow(team_id)
+
+            team = self.model.objects.get(id=team_id)
+            team.coworker = request.user
+            team.save()
+            # Print.yellow(team.brigadir.username, team.coworker.username, team.city.name,team.qualify.name, team.specialisation.specialisation)
+
+            if team.coworker is not None:
+                ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
+                ws.connect()
+                ws.send_notify_dara(type = "from_server_notify_coworker_joined", message = "", user_id =self.request.user.id, team_id = team_id)
+
+
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
 
 
 class TeamsView(ListView):
     model = Team
-    template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/team_list.html'
+    template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/teams_list.html'
     context_object_name = APP_NAMES.TEAM_LIST[APP_NAMES.NAME]
     ordering = ['-timestamp']
 
-    def get_queryset(self):
-        user = self.request.user
-        queryset = Team.objects.filter(brigadir__address__city=user.address.city)
-        return queryset
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset = Team.objects.filter(brigadir__address__city=user.address.city)
+    #     return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_style'] = APP_NAMES.TEAM_LIST[APP_NAMES.NAME]
+        context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
+        context['team_list'] = self.filter_coworker_teams(self.request.user)
         return context
+
+    def filter_coworker_teams(self, user, qualify=True, status=True, spec=True, allow=True, address=True):
+        team_model = self.model
+        required_filter = Q(coworker=None)
+        if address: required_filter &= Q(city=user.address.city)
+        if qualify: required_filter &= Q(qualify=user.qualify)
+        if status: required_filter &= Q(status=user.status)
+        if spec:
+            for specialization in user.specialisation.all():
+                required_filter &= Q(specialisation=specialization)
+        if allow:
+            user_allow_ids = set(allow.id for allow in user.allow.all())
+            if user_allow_ids:
+                for team in team_model.objects.all():
+                    team_allow_ids = set(allow.id for allow in team.allow.all())
+                    if user_allow_ids.issuperset(team_allow_ids):
+                        required_filter &= Q(allow__id__in=team_allow_ids)
+                        break
+
+        specialisations = team_model.objects.filter(required_filter)
+
+        if specialisations.count() == 0:
+            if qualify:
+                return self.filter_coworker_teams(user, qualify=False)
+            elif status:
+                return self.filter_coworker_teams(user, qualify=False, status=False)
+            elif allow:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False)
+            elif spec:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False, spec=False)
+            elif address:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False, spec=False,
+                                                  address=False)
+        return specialisations
+
+
+class TeamView(ListView):
+    model = Team
+    template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/team_view.html'
+    context_object_name = APP_NAMES.TEAM_LIST[APP_NAMES.NAME]
+    ordering = ['-timestamp']
+
+    slug_field = 'username'  # Поле, используемое для идентификации пользователя в URL
+    slug_url_kwarg = 'username'  # Параметр в URL, содержащий имя пользователя
+
+
+    # def get_queryset(self):
+    #     user = self.request.user
+    #     queryset = Team.objects.filter(brigadir__address__city=user.address.city)
+    #     return queryset
+
+    def get_context_data(self, **kwargs):
+        Print.yellow("Получили запрос")
+        context = super().get_context_data(**kwargs)
+
+        team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
+        brigadir = team_set.first().brigadir
+
+        team = self.model.objects.filter(brigadir=brigadir)
+        context['team'] = team
+
+
+        for specialisation in team:
+            print(specialisation.specialisation,specialisation.brigadir)
+
+
+        # if profile_user.status:
+        #     if profile_user.status.name == 'Заказ':
+        #         order = Order.objects.get(customer=profile_user)
+        #         if order is not None:
+        #             context['order_master'] = order.master
+        #     if profile_user.status.name == 'Прораб':
+        #         order = Order.objects.get(master=profile_user)
+        #         if order is not None:
+        #             context['order_customer'] = order.customer
+        #         teams = Team.objects.filter(brigadir=user)
+        #         context['teams'] = teams
+
+
+
+        # specialisations = self.model.objects.filter(brigadir__username=context['brigadir'])
+        context['page_style'] = APP_NAMES.TEAM_VIEW[APP_NAMES.NAME]
+        Print.yellow("Вернулли запрос")
+        return context
+

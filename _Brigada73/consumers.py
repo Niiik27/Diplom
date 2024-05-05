@@ -1,13 +1,10 @@
 from asgiref.sync import sync_to_async, async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.layers import get_channel_layer
 
 from django.apps import apps
 import json
 
-from django.db.models import Count, QuerySet
-from django.db import models
 from django.db.models import Q
 
 import APP_NAMES
@@ -37,6 +34,8 @@ translit_dict = {
 def get_chat_channel_name(user):
     user_translit = ''.join(translit_dict.get(c, c) for c in user.username)
     return f"{user_translit}_{user.id}"
+
+
 def build_chat_channel_name(username, user_id):
     user_translit = ''.join(translit_dict.get(c, c) for c in username)
     return f"{user_translit}_{user_id}"
@@ -45,7 +44,11 @@ def build_chat_channel_name(username, user_id):
 def get_spec_channel_name(spec):
     return f"spec_{spec.id}"
 
+def get_brigadir_channel_name(brigadir):
+    return f"brigadir_{brigadir.id}"
 
+def get_customer_channel_name(customer):
+    return f"customer_{customer.id}"
 @sync_to_async
 def get_order_channel_name(user):
     city = user.address.city.name
@@ -208,6 +211,24 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
                 num = await self.get_total_orders()
                 await self.send_total_orders(group_name, num)
+            elif user_status == "Заказ":
+                group_name = get_customer_channel_name(self.user)
+                await self.channel_layer.group_add(
+                    group_name,
+                    channel_name
+                )
+                brigadir = await self.get_brigadir_from_order(self.user)
+                num = await self.get_num_free_specialisations_in_team_by_brigadir(brigadir)
+                await self.send_notify_about_complete_team(group_name,num)
+            elif user_status == "Прораб":
+                group_name = get_brigadir_channel_name(self.user)
+                await self.channel_layer.group_add(
+                    group_name,
+                    channel_name
+                )
+                num= await self.get_num_free_specialisations_in_team_by_brigadir(self.user)
+                await self.send_notify_about_complete_team(group_name,num)
+
             elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
                 group_name = await get_team_channel_name(self.user)
                 await self.channel_layer.group_add(
@@ -270,6 +291,26 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             # await self.send_notify_about_new_team(group_name)
             # await self.send_total_orders(group_name,num)
             # await self.send_notify_about_new_team(group_name)# Пусть клиент сам считает количество воходящих
+        elif notify_type == 'from_server_notify_coworker_joined':  # Это приходит строго из питон клиента, это иммитация коннекта
+            user_id = text_data_json['user_id']
+            self.user = await self.get_user_by_id(user_id)
+            team_id = text_data_json['team_id']
+            brigadir, specialisation, count = await self.get_coworkers_team(team_id)
+            group_name = get_brigadir_channel_name(brigadir)
+            channel_name = online_users.get(brigadir.id)
+            if channel_name is not None:
+                await self.channel_layer.group_add(group_name, channel_name)
+                await self.send_notify_about_join_new_specialist(group_name, specialisation)
+                # if count == 0:
+                customer = await self.get_brigadir_order(brigadir)
+                channel_name = online_users.get(customer.id)
+                if channel_name is not None:
+                    await self.channel_layer.group_add(group_name, channel_name)
+                    await self.send_notify_about_complete_team(group_name,count)
+
+
+
+            Print.green(group_name)
 
     @database_sync_to_async
     def get_status_name(self):
@@ -281,6 +322,32 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
         return custom_user_model.objects.get(pk=user_id)
 
+    @database_sync_to_async
+    def get_coworkers_team(self, team_id):
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
+        coworker = team_model.objects.get(pk=team_id)
+        brigadir = coworker.brigadir
+        spesialisation = coworker.specialisation
+        team = team_model.objects.filter(brigadir=brigadir)
+        return brigadir, spesialisation, team.count()
+
+    @database_sync_to_async
+    def get_brigadir_from_order(self, customer):
+        order_model = apps.get_model(app_label=APP_NAMES.ORDERS[APP_NAMES.NAME], model_name='Order')
+        master = order_model.objects.get(customer=customer).master
+        return master
+    @database_sync_to_async
+    def get_num_free_specialisations_in_team_by_brigadir(self, brigadir):
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
+        team = team_model.objects.filter(brigadir=brigadir, coworker=None)
+        return team.count()
+
+    @database_sync_to_async
+    def get_brigadir_order(self, brigadir):
+        order_model = apps.get_model(app_label=APP_NAMES.ORDERS[APP_NAMES.NAME], model_name='Order')
+        order = order_model.objects.get(master=brigadir)
+        customer = order.customer
+        return customer
     @database_sync_to_async
     def get_total_orders(self):
 
@@ -296,14 +363,8 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_total_teams(self):  # Это вызовется когда я создам бригаду или отредактирую ее
-        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
-        # brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
-        my_new_team = team_model.objects.filter(
-            city=self.user.address.city,
-            specialisation__id__in=[spec.id for spec in self.user.specialisation.all()],
-            coworker=None
-        )
-        return my_new_team.count()
+        specialisations = self.filter_coworker_teams(self.user)
+        return specialisations.count()
 
     @database_sync_to_async
     def filter_teams(self):
@@ -320,13 +381,37 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 channel_name = online_users.get(member.id)
                 if channel_name is not None:
                     async_to_sync(self.channel_layer.group_add)(group_name, channel_name)
-
-            # async_to_sync(self.send_notify_about_new_team)(group_name)
-            # async_to_sync(channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
             async_to_sync(self.send_notify_about_new_team)(group_name)
         return candidates
 
-    # @database_sync_to_async
+    def filter_coworker_teams(self, user, qualify=True, status=True, spec=True, allow=True, address=True):
+        # brigadir, coworker, specialisation, status, qualify, city, allow, confirmed
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
+        required_filter = Q(coworker=None)
+        if address: required_filter &= Q(city=user.address.city)
+        if qualify: required_filter &= Q(qualify=user.qualify)
+        if status: required_filter &= Q(status=user.status)
+        if spec: required_filter &= Q(specialisation__in=user.specialisation.all())
+        if allow:
+            allow_ids = [allow.id for allow in user.allow.all()]
+            required_filter &= Q(allow__id__in=allow_ids)
+        specialisations = team_model.objects.filter(required_filter)
+        if specialisations.count() == 0:
+            # по этому могу здесь это сделать без универсальной логики
+            if qualify:
+                return self.filter_coworker_teams(user, qualify=False)
+            elif status:
+                return self.filter_coworker_teams(user, qualify=False, status=False)
+            elif allow:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False)
+            elif spec:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False, spec=False)
+            elif address:
+                return self.filter_coworker_teams(user, qualify=False, status=False, allow=False, spec=False,
+                                                  address=False)
+        return specialisations
+
+
     def filter_specialist(self, specialist, qualify=True, status=True, spec=True, allow=True, address=True):
         custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
         candidates = custom_user_model.objects.none()
@@ -408,12 +493,15 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             'num': num,
         })
 
+    async def send_notify_about_complete_team(self, group_name,count):
+        await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'team_complete', 'num': count})
+
+    async def send_notify_about_join_new_specialist(self, group_name,specialisation):
+        await self.channel_layer.group_send(group_name, {"type": 'send_notify_1', 'notify_type': 'join_specialist', 'num': 1,'spec_name': specialisation.specialisation,'spec_id': specialisation.id,'coworker_username':self.user.username,'coworker_id':self.user.id})
+    async def send_notify_1(self, event):
+        await self.send(text_data=json.dumps({'num': event['num'], 'type': event["notify_type"], 'spec_name': event["spec_name"], 'spec_id': event["spec_id"], 'coworker_username': event["coworker_username"], 'coworker_id': event["coworker_id"]}))
     async def send_notify_about_new_team(self, group_name):
-        # async_to_sync(self.channel_layer.group_send)(group_name, {"type": "send_notify", 'notify_type': 'new_team', 'num': 1})
-
         await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_team', 'num': 1})
-
     async def send_notify(self, event):
         await self.send(text_data=json.dumps({"num": event['num'], "type": event["notify_type"]}))
-
 
