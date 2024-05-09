@@ -2,103 +2,89 @@
 {% block content %}
 {% load static %}
 <main>
-    Страница бригад
-    {% if user.status.name == 'Прораб' %}
-    <h2>Создайте бригаду для заказа {{ order_customer.username }}</h2>
-        <div class="form-group" id="workers">
-        <!-- Поля для первого специалиста -->
-        <div class="worker">
-            <select name="specialisation">
-                {% for specialisation in specialisations %}
-                <option value="{{ specialisation.id }}">{{ specialisation.specialisation }}</option>
-                {% endfor %}
-            </select>
-            <select name="status">
-                {% for status in statuses %}
-                <option value="{{ status.id }}">{{ status.name }}</option>
-                {% endfor %}
-            </select>
-            <select name="qualify">
-                {% for qualify in qualifies %}
-                <option value="{{ qualify.id }}">{{ qualify.name }}</option>
-                {% endfor %}
-            </select>
-            <select name="city">
-                {% for city in cities %}
-                <option value="{{ city.id }}">{{ city.name }}</option>
-                {% endfor %}
-            </select>
-            {% for allowance in allowances %}
-            <p>
-                <input type="checkbox" id="{{ allowance.id }}" name="allowances" value="{{ allowance.id }}">
-                <label for="{{ allowance.id }}">{{ allowance.allow }}</label><br>
-            </p>
-            {% endfor %}
-            <input type="text" name="notes" placeholder="Примечания">
-        </div>
-    </div>
-    <button id="addWorkerBtn" type="button">Добавить специалиста</button>
-    <button id="createTeam">Создать бригаду</button>
-    <!--    </form>-->
-    {% endif %}
+
+<table id="teamTable">
+    <thead>
+        <tr>
+            <th class="hidden" data-column-name="team_id">ID</th>
+            <th>Специализация</th>
+            <th>Сотрудник</th>
+            <th>Статус</th>
+            <th>Квалификация</th>
+            <th>Разрешения</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for spec in specialists %}
+        <tr>
+            <td class="hidden" data-column-name="team_id">{{ spec.id }}</td>
+            <td data-column-name="specialisation">
+                <select name="specialisation">
+                    {% for key,value in spec.specialisations.items %}
+                        <option value="{{ forloop.counter }}" {% if value %}selected{% endif %}>{{ key }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            {% if spec.spec_name %}
+                <td data-column-name="spec_name">
+                    <a href="{% url 'profile' username=spec.spec_name %}" class="username">{{ spec.spec_name }} </a>
+                    <button id="delRowBtn_{{ spec.id }}">Удалить</button>
+                </td>
+            {% else %}
+                <td class="empty-coworker" data-column-name="spec_name"></td>
+            {% endif %}
+            <td data-column-name="status">
+                <select name="status">
+                    {% for key,value in spec.statuses.items %}
+                        <option value="{{ forloop.counter }}" {% if value %}selected{% endif %}>{{ key }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td data-column-name="qualify">
+                <select name="qualify">
+                    {% for key,value in spec.qalifyes.items %}
+                        <option value="{{ forloop.counter }}" {% if value %}selected{% endif %}>{{ key }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td data-column-name="allowances">
+                <div class="select-wrapper">
+                    <div class="select-header">Список разрешений</div>
+                    <ul class="select-options">
+
+
+                    {% for key,value in spec.allows.items %}
+                        <li>
+                            <input type="checkbox" id="allow-{{ forloop.counter }}" name="allowances{{ forloop.counter }}" value="{{ forloop.counter }}" {% if value %}checked{% endif %}>
+                            <label for="allow-{{ forloop.counter }}">{{ key }}</label>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </td>
+
+
+
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+
+
+<button id="addRowBtn">Добавить строку</button>
+<button id="saveBtn">Сохранить</button>
+
 </main>
 <script>
-    let addWorkerBtn = document.getElementById('addWorkerBtn');
-    addWorkerBtn.addEventListener("click", () => {
-        let workersContainer = document.getElementById('workers');
-        let newWorker = workersContainer.getElementsByClassName('worker')[0].cloneNode(true);
+    // const tableurl: "{# url 'teams' username=user.username #}";
+    const taburl = "{% url 'teams' %}";
+    const delete_user_from_team = "{% url 'team_delete_user' %}";
+    const csrf_token = "{{ csrf_token }}";
 
-        // Изменяем имена полей ввода, добавляя уникальный индекс
-        let newIndex = workersContainer.getElementsByClassName('worker').length;
-        newWorker.querySelectorAll('select, input').forEach(input => {
-            input.name = input.name.replace(/\d+/g, newIndex);
-        });
+</script>
+<script src="{% static '' %}{{ page_style }}/js/script.js"></script>
+<script>
 
-        workersContainer.appendChild(newWorker);
-    });
-
-    $(document).ready(function () {
-        let requestData = [];
-        $("#createTeam").click(function (event) {
-            event.preventDefault();
-
-            $(".worker").each(function () {
-                let workerData = {
-                    specialisation: $(this).find("select[name='specialisation']").val(),
-                    status: $(this).find("select[name='status']").val(),
-                    qualify: $(this).find("select[name='qualify']").val(),
-                    city: $(this).find("select[name='city']").val(),
-                    allowances: $(this).find("input[name='allowances']:checked").map(function () {
-                        return $(this).val();
-                    }).get(),
-                    notes: $(this).find("input[name='notes']").val()
-                };
-                requestData.push(workerData);
-            });
-
-            console.log("requestData",requestData);
-            // Отправка POST-запроса
-            $.ajax({
-                type: "POST",
-                // url: "{# url 'teams' username=user.username #}",
-
-                url: "{% url 'teams' %}",
-                data: { workers: JSON.stringify(requestData)},
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                success: function (response) {
-                    console.log("Запрос успешно отправлен:", response);
-                    $("#createTeam").hide();
-                    let newTextElement = $("<p>Бригада создана</p>");
-                    $("#createTeam").after(newTextElement);
-                },
-                error: function (xhr, status, error) {
-                    console.error("Произошла ошибка:", error);
-                }
-            });
-        });
-    });
 </script>
 {% endblock %}
 

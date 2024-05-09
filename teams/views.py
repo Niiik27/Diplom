@@ -22,44 +22,67 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
     template_name = f'{APP_NAMES.TEAMS[APP_NAMES.NAME]}/create.html'
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
+        context['page_style'] = APP_NAMES.TEAM_CREATE[APP_NAMES.NAME]
 
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print("Бригада",context)
         user = self.request.user
         context['user'] = user
-        print(user.status)
-
         if user.status.name == 'Прораб':
+            # context['username'] = user.username
             order = Order.objects.get(master=user)
+
             if order is not None:
                 context['order_customer'] = order.customer
-            statuses = Status.objects.exclude(name__in=['Прораб', 'Заказ', 'Мастер'])
-            if statuses is not None:
-                context['statuses'] = statuses
-            specialisations = Specialisations.objects.all()
-            if specialisations is not None:
-                context['specialisations'] = specialisations
-            qualifyes = Qualify.objects.all()
-            if qualifyes is not None:
-                context['qualifies'] = qualifyes
-            cities = City.objects.all()
-            if cities is not None:
-                context['cities'] = cities
-            allowances = Allowance.objects.all()
-            if allowances is not None:
-                context['allowances'] = allowances
+                team = self.model.objects.filter(brigadir=user)
+                specialisation_list = Specialisations.objects.all()
+                status_list = Status.objects.exclude(name__in=['Прораб', 'Заказ', 'Мастер'])
+                qualify_list = Qualify.objects.all()
+                allow_list = Allowance.objects.all()
+                specialists = []
 
-        context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
-        context['username'] = user.username
+                for j in range(team.count()):
+                    team_spec = team[j]
+                    spec_res = {}
+                    spec_data = {}
+                    coeorker = team_spec.coworker
+                    if coeorker is not None:
+                        spec_data['id'] = team_spec.id
+                        spec_data['spec_name'] = team_spec.coworker.username
+                    for i in range(specialisation_list.count()):
+                        spec_item = specialisation_list[i]
+                        spec_res[spec_item.specialisation] = spec_item == team_spec.specialisation
+                    spec_data['specialisations'] = spec_res
+
+                    stat_res = {}
+                    for i in range(status_list.count()):
+                        status_item = status_list[i]
+                        stat_res[status_item.name] = status_item == team_spec.status
+                    spec_data['statuses'] = stat_res
+
+                    qualify_res = {}
+                    for i in range(qualify_list.count()):
+                        qualify_item = qualify_list[i]
+                        qualify_res[qualify_item.name] = qualify_item == team_spec.qualify
+                    spec_data['qalifyes'] = qualify_res
+                    allow_res = {}
+                    for i in range(allow_list.count()):
+                        allow_item = allow_list[i]
+                        spec_allow_ids = team_spec.allow.values_list('id', flat=True)
+                        allow_res[allow_item.allow] = allow_item.id in spec_allow_ids
+                    spec_data['allows'] = allow_res
+                    specialists.append(spec_data)
+
+                context['specialists'] = specialists
+                print("context".upper(),context)
+
         return context
 
     def post(self, request, *args, **kwargs):
+        print(request.POST)
         workers = json.loads(request.POST.get('workers'))
-        Print.green(workers)
         brigadir = self.request.user
         if brigadir and brigadir.status.name == 'Прораб':
             Team.objects.filter(brigadir=brigadir).delete()
@@ -71,7 +94,7 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
                 specialisation_id = worker['specialisation']
                 status_id = worker['status']
                 qualify_id = worker['qualify']
-                city_id = worker['city']
+                city_id = brigadir.address.city.id
                 allowances = worker['allowances']
 
                 specialisation_obj = Specialisations.objects.get(id=specialisation_id)
@@ -221,3 +244,21 @@ class TeamView(ListView):
         Print.yellow("Вернулли запрос")
         return context
 
+class TeamDeleteUser(LoginRequiredMixin, TemplateView):
+    model = Team
+    def post(self, request, *args, **kwargs):
+        team_id = request.POST.get('team_id')
+        if team_id:
+            Print.yellow(team_id)
+            team = self.model.objects.get(id=team_id)
+            team.delete()
+
+            # if team.coworker is not None:
+            #     ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
+            #     ws.connect()
+            #     ws.send_notify_dara(type = "from_server_notify_coworker_joined", message = "", user_id =self.request.user.id, team_id = team_id)
+            #
+
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
