@@ -61,7 +61,6 @@ input {
     cursor: pointer;
     width: 100%;
     height: 35px;
-
     align-items: center;
     justify-content: center;
 }
@@ -87,56 +86,11 @@ input {
 }
 
 
-.dropdown {
-    display: inline-block;
-    cursor: pointer; /* курсор-указатель для пользователя */
-color:red;
-}
-
-.dropdown > span {
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 3px;
-color:red;
-}
-
-.dropdown ul {
-    display: none;
-    position: absolute;
-    background: white;
-    list-style-type: none;
-    padding: 0;
-color:red;
-}
-
-.dropdown:hover ul {
-    display: block; /* плавное появление списка при наведении */
-    color:red;
-    background-color: black;
-}
-
-.dropdown input[type="checkbox"] {
-    margin-right: 15px; /* добавляет пространство вокруг чекбокса */
-    color:red;
-}
-
-
-
-.dropdown input[type="checkbox"]::before {
-  content: "✔"; /* символ галочки Unicode */
-  display: none;
-  /* Галочка скрыта... */
-}
-
-.dropdown input[type="checkbox"]:checked::before {
-  display: inline;
-  /* и вот она появилась перед глазами пользователя. */
-}
 
 tr:has(td.empty-coworker:empty){
     background-color: #5d2626; /* Красный цвет фона */
 }
 
-.hidden{
-    display: none;
-}
+/*.hidden{*/
+/*    display: none;*/
+/*}*/

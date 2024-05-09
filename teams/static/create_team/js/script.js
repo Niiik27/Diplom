@@ -26,8 +26,28 @@ $(document).ready(function () {
         $(this).find(".select-options").hide();
     });
 });
+
 document.getElementById('addRowBtn').addEventListener('click', function() {
-    let newRow = document.getElementById('teamTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0].cloneNode(true);
+    let tableBody = document.getElementById('teamTable').getElementsByTagName('tbody')[0];
+    let newIndex = tableBody.getElementsByTagName('tr').length;
+
+    let newRow = tableBody.getElementsByTagName('tr')[0].cloneNode(true);
+
+    // Изменяем id новой строки
+    newRow.id = 'new_' + newIndex;
+
+    // Обновляем id строки в ячейке "team_id"
+    newRow.querySelector('[data-column-name="team_id"]').textContent = newRow.id;
+
+    // Удаляем атрибут class, если он присутствует
+    newRow.classList.remove('hidden');
+
+    // Получаем все чекбоксы в строке и добавляем уникальные ID
+    newRow.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
+        checkbox.id = `allow-${newIndex}-${index}`;
+        checkbox.setAttribute('for', checkbox.id);
+    });
+
     newRow.querySelectorAll('select').forEach(select => {
         select.selectedIndex = 0; // Сбросить выбор в списке выбора
     });
@@ -35,8 +55,13 @@ document.getElementById('addRowBtn').addEventListener('click', function() {
         input.value = ''; // Очистить текстовые поля и снять все флажки у чекбоксов
         input.checked = false;
     });
+
     document.getElementById('teamTable').getElementsByTagName('tbody')[0].appendChild(newRow);
 });
+
+
+
+
 
 document.getElementById('saveBtn').addEventListener('click', function() {
     let tableData = [];
@@ -116,8 +141,10 @@ console.log("delete_user_from_team",delete_user_from_team)
                 // Обработка успешного удаления
                 console.log('Пользователь успешно удален из бригады:', response);
                 // Удаление строки из таблицы
-                document.querySelector(`#teamTable tr:nth-child(${rowId})`).remove();
-            },
+                let row = document.getElementById("row_"+rowId);
+                if (row) {
+                    row.remove();
+                }            },
             error: function(xhr, status, error) {
                 // Обработка ошибки удаления
                 console.error('Произошла ошибка при удалении пользователя из бригады:', error);

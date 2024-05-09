@@ -12,11 +12,13 @@
             <th>Статус</th>
             <th>Квалификация</th>
             <th>Разрешения</th>
+            <th>Удалить</th>
+
         </tr>
     </thead>
     <tbody>
     {% for spec in specialists %}
-        <tr>
+         <tr id = "row_{{ spec.id }}" {% if spec.id == 'tpl' %}class="hidden"{% endif %}>
             <td class="hidden" data-column-name="team_id">{{ spec.id }}</td>
             <td data-column-name="specialisation">
                 <select name="specialisation">
@@ -26,10 +28,9 @@
                 </select>
             </td>
             {% if spec.spec_name %}
-                <td data-column-name="spec_name">
-                    <a href="{% url 'profile' username=spec.spec_name %}" class="username">{{ spec.spec_name }} </a>
-                    <button id="delRowBtn_{{ spec.id }}">Удалить</button>
-                </td>
+             <td class="empty-coworker" data-column-name="spec_name">
+                 <a href="{% url 'profile' username=spec.spec_name %}" class="username">{{ spec.spec_name }} </a>
+             </td>
             {% else %}
                 <td class="empty-coworker" data-column-name="spec_name"></td>
             {% endif %}
@@ -55,15 +56,17 @@
 
                     {% for key,value in spec.allows.items %}
                         <li>
-                            <input type="checkbox" id="allow-{{ forloop.counter }}" name="allowances{{ forloop.counter }}" value="{{ forloop.counter }}" {% if value %}checked{% endif %}>
-                            <label for="allow-{{ forloop.counter }}">{{ key }}</label>
+                            <input type="checkbox" id="allow-{{ spec.id }}_{{ forloop.counter }}" name="allowances{{ forloop.counter }}" value="{{ forloop.counter }}" {% if value %}checked{% endif %}>
+                            <label for="allow-{{ spec.id }}_{{ forloop.counter }}">{{ key }}</label>
                         </li>
                     {% endfor %}
                     </ul>
                 </div>
             </td>
 
-
+            <td data-column-name="del-spec">
+                <button id="delRowBtn_{{ spec.id }}">Удалить</button>
+            </td>
 
         </tr>
     {% endfor %}

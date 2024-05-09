@@ -42,39 +42,58 @@ class CreateTeamView(LoginRequiredMixin, TemplateView):
                 qualify_list = Qualify.objects.all()
                 allow_list = Allowance.objects.all()
                 specialists = []
-
-                for j in range(team.count()):
-                    team_spec = team[j]
-                    spec_res = {}
-                    spec_data = {}
-                    coeorker = team_spec.coworker
-                    if coeorker is not None:
+                if team.count():
+                    for j in range(team.count()):
+                        team_spec = team[j]
+                        spec_res = {}
+                        spec_data = {}
+                        coworker = team_spec.coworker
                         spec_data['id'] = team_spec.id
-                        spec_data['spec_name'] = team_spec.coworker.username
-                    for i in range(specialisation_list.count()):
-                        spec_item = specialisation_list[i]
-                        spec_res[spec_item.specialisation] = spec_item == team_spec.specialisation
-                    spec_data['specialisations'] = spec_res
 
-                    stat_res = {}
-                    for i in range(status_list.count()):
-                        status_item = status_list[i]
-                        stat_res[status_item.name] = status_item == team_spec.status
-                    spec_data['statuses'] = stat_res
+                        if coworker is not None:
+                            spec_data['spec_name'] = coworker.username
+                        for i in range(specialisation_list.count()):
+                            spec_item = specialisation_list[i]
+                            spec_res[spec_item.specialisation] = spec_item == team_spec.specialisation
+                        spec_data['specialisations'] = spec_res
 
-                    qualify_res = {}
-                    for i in range(qualify_list.count()):
-                        qualify_item = qualify_list[i]
-                        qualify_res[qualify_item.name] = qualify_item == team_spec.qualify
-                    spec_data['qalifyes'] = qualify_res
-                    allow_res = {}
-                    for i in range(allow_list.count()):
-                        allow_item = allow_list[i]
-                        spec_allow_ids = team_spec.allow.values_list('id', flat=True)
-                        allow_res[allow_item.allow] = allow_item.id in spec_allow_ids
-                    spec_data['allows'] = allow_res
+                        stat_res = {}
+                        for i in range(status_list.count()):
+                            status_item = status_list[i]
+                            stat_res[status_item.name] = status_item == team_spec.status
+                        spec_data['statuses'] = stat_res
+
+                        qualify_res = {}
+                        for i in range(qualify_list.count()):
+                            qualify_item = qualify_list[i]
+                            qualify_res[qualify_item.name] = qualify_item == team_spec.qualify
+                        spec_data['qalifyes'] = qualify_res
+                        allow_res = {}
+                        for i in range(allow_list.count()):
+                            allow_item = allow_list[i]
+                            spec_allow_ids = team_spec.allow.values_list('id', flat=True)
+                            allow_res[allow_item.allow] = allow_item.id in spec_allow_ids
+                        spec_data['allows'] = allow_res
+                        specialists.append(spec_data)
+                else:
+                    spec_item = {}
+                    spec_data = {'id': 'tpl'}
+                    for spec in specialisation_list:
+                        spec_item[spec.specialisation] = False
+                    spec_data['specialisations'] = spec_item
+                    spec_item = {}
+                    for status_item in status_list:
+                        spec_item[status_item.name] = False
+                    spec_data['statuses'] = spec_item
+                    spec_item = {}
+                    for qualify_item in qualify_list:
+                        spec_item[qualify_item.name] = False
+                    spec_data['qalifyes'] = spec_item
+                    spec_item = {}
+                    for allow_item in allow_list:
+                        spec_item[allow_item.allow] = False
+                    spec_data['allows'] = spec_item
                     specialists.append(spec_data)
-
                 context['specialists'] = specialists
                 print("context".upper(),context)
 
