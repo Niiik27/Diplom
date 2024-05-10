@@ -27,7 +27,7 @@ $(document).ready(function () {
     });
 });
 
-document.getElementById('addRowBtn').addEventListener('click', function() {
+document.getElementById('addRowBtn').addEventListener('click', function () {
     let tableBody = document.getElementById('teamTable').getElementsByTagName('tbody')[0];
     let newIndex = tableBody.getElementsByTagName('tr').length;
 
@@ -56,14 +56,23 @@ document.getElementById('addRowBtn').addEventListener('click', function() {
         input.checked = false;
     });
 
+    // newRow.querySelector('[data-column-name="del-spec"] button').id = `delRowBtn_${newIndex}_new`;
+    let deleteButton = newRow.querySelector('[data-column-name="del-spec"] button');
+    deleteButton.id = `newBtn_${newIndex}`;
+    // document.querySelectorAll('[id^="newBtn_"]').forEach(button => {
+    deleteButton.addEventListener('click', function() {
+        console.log("ddddddddddddddddddddddddd");
+        let rowId = this.id.split('_')[1]; // Получаем номер строки из id кнопки
+        document.querySelector(`#new_${rowId}`).remove(); // Удаляем строку из разметки
+    // });
+});
+
+
     document.getElementById('teamTable').getElementsByTagName('tbody')[0].appendChild(newRow);
 });
 
 
-
-
-
-document.getElementById('saveBtn').addEventListener('click', function() {
+document.getElementById('saveBtn').addEventListener('click', function () {
     let tableData = [];
     let rows = document.getElementById('teamTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
     for (let i = 0; i < rows.length; i++) {
@@ -107,17 +116,17 @@ document.getElementById('saveBtn').addEventListener('click', function() {
         }
     });
 
-console.log("tableData",tableData);
+    console.log("tableData", tableData);
     // Отправить данные на сервер с помощью AJAX
     $.ajax({
         type: 'POST',
         url: taburl,
-        data: { workers: JSON.stringify(tableData) },
+        data: {workers: JSON.stringify(tableData)},
         headers: {"X-CSRFToken": csrf_token},
-        success: function(response) {
+        success: function (response) {
             console.log('Данные успешно отправлены на сервер:', response);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Произошла ошибка:', error);
         }
     });
@@ -125,30 +134,41 @@ console.log("tableData",tableData);
 
 
 document.querySelectorAll('[id^="delRowBtn_"]').forEach(button => {
-    button.addEventListener('click', function() {
-        let rowId = this.id.split('_')[1];
-        console.log("rowId",rowId)
-console.log("delete_user_from_team",delete_user_from_team)
+    button.addEventListener('click', function () {
+        let btnDesc = this.id.split('_');
+        console.log(btnDesc)
         // AJAX запрос для удаления
-        $.ajax({
-            type: 'POST',
-            url: delete_user_from_team,
-            data: {
-                team_id: rowId,
-            },
-            headers: {"X-CSRFToken": csrf_token},
-            success: function(response) {
-                // Обработка успешного удаления
-                console.log('Пользователь успешно удален из бригады:', response);
-                // Удаление строки из таблицы
-                let row = document.getElementById("row_"+rowId);
-                if (row) {
-                    row.remove();
-                }            },
-            error: function(xhr, status, error) {
-                // Обработка ошибки удаления
-                console.error('Произошла ошибка при удалении пользователя из бригады:', error);
+        if (btnDesc.length === 2) {
+            let rowId = btnDesc[1];
+            console.log("rowId", rowId)
+            console.log("delete_user_from_team", delete_user_from_team)
+            $.ajax({
+                type: 'POST',
+                url: delete_user_from_team,
+                data: {
+                    team_id: rowId,
+                },
+                headers: {"X-CSRFToken": csrf_token},
+                success: function (response) {
+                    // Обработка успешного удаления
+                    console.log('Пользователь успешно удален из бригады:', response);
+                    // Удаление строки из таблицы
+                    let row = document.getElementById("row_" + rowId);
+                    if (row) {
+                        row.remove();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Обработка ошибки удаления
+                    console.error('Произошла ошибка при удалении пользователя из бригады:', error);
+                }
+            });
+        } else {
+            console.log('Новая запись удалена');
+            let row = document.getElementById("new_" + rowId);
+            if (row) {
+                row.remove();
             }
-        });
+        }
     });
 });
