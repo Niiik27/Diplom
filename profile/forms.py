@@ -126,6 +126,8 @@ class EditCustomerForm(UserCreationForm):
         required=False
     )
     about = forms.CharField(label="О заказе", required=False, widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
+    first_name = forms.CharField(label="Тема заказа", required=False, widget=forms.TextInput())
+
     # status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказчик', 'Прораб']), label='Статус')
 
     class Meta:

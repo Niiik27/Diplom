@@ -29,8 +29,10 @@ class OrderListView(ListView):
 
 class TakeOrderView(View):
     def post(self, request, *args, **kwargs):
-        customer_id = request.POST.get('customer_id')
-        if customer_id:
+
+        orderId = request.POST.get('orderId')
+        print("Получил запрос",request.POST)
+        if orderId:
             user_id = self.request.user.pk
             user = get_object_or_404(CustomUser, pk=user_id)
 
@@ -40,8 +42,9 @@ class TakeOrderView(View):
                 user.status = new_status
                 user.save()
 
-            order = get_object_or_404(Order, customer_id=customer_id, master=None)
-            order.master_id = request.user.id
+            # order = get_object_or_404(Order, customer_id=customer_id, master=None)
+            order = Order.objects.get(id=orderId)
+            order.master= request.user
             order.save()
 
             return JsonResponse({'success': True})

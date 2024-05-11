@@ -51,16 +51,21 @@ def get_customer_channel_name(customer):
     return f"customer_{customer.id}"
 @sync_to_async
 def get_order_channel_name(user):
-    city = user.address.city.name
-    city_translit = ''.join(translit_dict.get(c, c) for c in city)
-    return f"orders_{city_translit}"
+    if user.address.city:
+        city = user.address.city.name
+        city_translit = ''.join(translit_dict.get(c, c) for c in city)
+        return f"orders_{city_translit}"
+    else: return None
+
 
 
 @sync_to_async
 def get_team_channel_name(user):
-    city = user.address.city.name
-    city_translit = ''.join(translit_dict.get(c, c) for c in city)
-    return f"team_{city_translit}"
+    if user.address.city:
+        city = user.address.city.name
+        city_translit = ''.join(translit_dict.get(c, c) for c in city)
+        return f"team_{city_translit}"
+    else: return None
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -204,13 +209,14 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
             if user_status == "Мастер":
                 group_name = await get_order_channel_name(self.user)
-                await self.channel_layer.group_add(
-                    group_name,
-                    channel_name
-                )
+                if group_name is not None:
+                    await self.channel_layer.group_add(
+                        group_name,
+                        channel_name
+                    )
 
-                num = await self.get_total_orders()
-                await self.send_total_orders(group_name, num)
+                    num = await self.get_total_orders()
+                    await self.send_total_orders(group_name, num)
             elif user_status == "Заказ":
                 group_name = get_customer_channel_name(self.user)
                 await self.channel_layer.group_add(
@@ -231,21 +237,24 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
             elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
                 group_name = await get_team_channel_name(self.user)
+                if group_name is not None:
+                    await self.channel_layer.group_add(
+                        group_name,
+                        channel_name
+                    )
+                    num = await self.get_total_teams()
+                    await self.send_total_teams(group_name, num)
+
+            # Сообщения будут доступны всем статусам
+            group_name = get_chat_channel_name(self.user)
+            if group_name is not None:
+
                 await self.channel_layer.group_add(
                     group_name,
                     channel_name
                 )
-                num = await self.get_total_teams()
-                await self.send_total_teams(group_name, num)
-
-            # Сообщения будут доступны всем статусам
-            group_name = get_chat_channel_name(self.user)
-            await self.channel_layer.group_add(
-                group_name,
-                channel_name
-            )
-            num = await self.get_total_unread_num()
-            await self.send_total_messages_notify(num)
+                num = await self.get_total_unread_num()
+                await self.send_total_messages_notify(num)
 
         await self.accept()  # это выполнимо для обоих исходов  но так понятнее для кого подключениие
 
@@ -271,13 +280,15 @@ class NotifyConsumer(AsyncWebsocketConsumer):
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
             group_name = await get_order_channel_name(self.user)
-            await self.channel_layer.group_add(
-                group_name,
-                self.channel_name
-            )
-            # num = await self.get_total_orders()
-            # await self.send_total_orders(group_name,num)
-            await self.send_notify_about_new_order(group_name)  # Пусть клиент сам считает количество воходящих
+            if group_name is not None:
+
+                await self.channel_layer.group_add(
+                    group_name,
+                    self.channel_name
+                )
+                # num = await self.get_total_orders()
+                # await self.send_total_orders(group_name,num)
+                await self.send_notify_about_new_order(group_name)  # Пусть клиент сам считает количество воходящих
         elif notify_type == 'from_server_notify_new_team':  # Это приходит строго из питон клиента, это иммитация коннекта
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
@@ -315,7 +326,9 @@ class NotifyConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_status_name(self):
         # status_model = apps.get_model(app_label='profile', model_name='Status')
-        return self.user.status.name
+        if self.user.status:
+            return self.user.status.name
+        else: return None
 
     @database_sync_to_async
     def get_user_by_id(self, user_id):

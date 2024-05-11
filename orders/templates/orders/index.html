@@ -2,29 +2,33 @@
 {% block content %}
 {% load static %}
 <main>
-    <!--<div class="container">-->
-    <!--    <div class="">-->
-    <!--        {% for user in customuser_list %}-->
-    <!--        <div class="">-->
-    <!--            <div class="card">-->
-    <!--                <div class="">-->
-    <!--                    <a href="{% url 'profile' username=user.username %}" class="username">{{ user.username }} </a>-->
-    <!--                </div>-->
-    <!--            </div>-->
-    <!--        </div>-->
-    <!--        {% endfor %}-->
-    <!--    </div>-->
-    <!--</div>-->
-
-    {% for order in order_list %}
-    <a href="{% url 'profile' order.customer.username %}">
-        <p>Заказ: {{ order.customer.username }}</p>
-        <p>Категория: {{ order.customer.first_name }}</p>
-        <p>Описание: {{ order.customer.about }}</p>
-    </a>
-    {% endfor %}
-
+    <h2>Просмотр заказов</h2>
+    <table>
+        <thead>
+            <tr>
+            <th style="width: 50px;">ID</th>
+            <th style="width: 100px;">Заказ</th>
+            <th style="width: 150px;">Тема</th>
+            <th style="width: 200px;">Цена-качество-срок</th>
+            <th style="width: 300px;">Описание</th>
+            <th style="width: 100px;">Откликнуться</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in order_list  %}
+                <tr>
+                    <td>{{ order.id }}</a></td>
+                    <td><a href="{% url 'profile' order.customer.username %}" class="username">{{ order.customer.username }}</a></td>
+                    <td>{{ order.customer.first_name }}</td>
+                    <td>{{ order.customer.qualify }}</td>
+                    <td>{{ order.customer.about }}</td>
+                    <td><button id="sendButton_{{ order.id }}" data-take-url="{% url 'take' customer=order.customer.username %}" data-token="{{ csrf_token }}" data-order-id="{{ order.id }}">Взять заказ</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </main>
+<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
     {% endblock content %}
 
 

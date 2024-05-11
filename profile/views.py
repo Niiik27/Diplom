@@ -153,16 +153,19 @@ class UserUpdateView(UpdateView):
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
-        if user.status_id < len(Status.objects.all())-1:
-
-            form = EditUserForm(instance=user)
-            context = {'form': form}
-        elif user.status_id != len(Status.objects.all()):
-
-            form = EditProrabForm(instance=user)
-            context = {'form': form}
+        if user.status:
+            match user.status.name:
+                case 'Заказ':
+                    form = EditCustomerForm(instance=user)#Заказчик
+                    context = {'form': form}
+                case 'Заказ':
+                    form = EditProrabForm(instance=user)
+                    context = {'form': form}
+                case _:
+                    form = EditUserForm(instance=user)
+                    context = {'form': form}
         else:
-            form = EditCustomerForm(instance=user)
+            form = EditUserForm(instance=user)
             context = {'form': form}
         form.fields.pop('password1')
         form.fields.pop('password2')

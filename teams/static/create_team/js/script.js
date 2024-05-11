@@ -135,8 +135,6 @@ document.getElementById('saveBtn').addEventListener('click', function () {
 document.querySelectorAll('[id^="delRowBtn_"]').forEach(button => {
     button.addEventListener('click', function () {
         let btnDesc = this.id.split('_');
-        console.log(btnDesc)
-        // AJAX запрос для удаления
         if (btnDesc.length === 2) {
             let rowId = btnDesc[1];
             console.log("rowId", rowId)
