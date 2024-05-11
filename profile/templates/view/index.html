@@ -102,14 +102,12 @@
                 <li>{{ specialization }}</li>
             {% endfor %}
         </ul>
-
         <h2>Разрешения:</h2>
         <ul>
             {% for allowance in profile_user.allow.all %}
                 <li>{{ allowance }}</li>
             {% endfor %}
         </ul>
-
         {% if social_list.items %}
             <h2>Соцсети:</h2>
             <ul>
@@ -129,35 +127,11 @@
                 {% endfor %}
             </ul>
         {% endif %}
-
-        {% if profile_user.status.name == 'Прораб' %}
-            <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
-        {% endif %}
-
-
     <br>
         {% if user == profile_user %}
             {% if user.status.name == 'Прораб' %}
-                <h2><a href="{% url 'teams' username=user.username %}">У Вас есть заказ {{ order_customer.username }}. Вы должны
-                    создать свою бригаду:</a></h2>
-                <h2>Бригада</h2>
-                <br>
-                    <p>Бригадир: {{ teams.brigadir }}</p>
-                <p>Заказ: {{ order_customer.username }}</p>
-                <br>
-                {% for teams in teams %}
-                    <p>Специализация: {{ teams.specialisation }}</p>
-                    <p>Статус: {{ teams.status }}</p>
-                    <p>Квалификация: {{ teams.qualify }}</p>
-                    <h3>Разрешения:</h3>
-                    <ul>
-                        {% for allow in teams.allow.all %}
-                            <li>{{ allow }}</li>
-                        {% endfor %}
-                    </ul>
-                    <p>Подтверждение сотрудничества: {{ teams.confirmed }}</p>
-                    <br>
-                {% endfor %}
+                <h2><a href="{% url 'profile' username=order_customer.username %}">Ваш заказ: {{ order_customer.username }}.</a></h2>
+                <h2><a href="{% url 'teams' username=user.username %}">Ваша бригада</a></h2>
             {% endif %}
         {% else %}
             {% if user.status.name != 'Мастер' and user.status.name != 'Прораб' and user.status.name != 'Заказ' %}
@@ -173,7 +147,6 @@
             {% else %}
                 <button id="sendButton">Взять заказ</button>
             {% endif %}
-
             {% if user.status.name == 'Прораб' or profile_user.status.name == 'Заказ' %}
                 {% if order_master %}
                     {% if order_master == user %}
@@ -182,7 +155,6 @@
                 {% endif %}
             {% endif %}
         {% endif %}
-
     {% endif %}
 </main>
 

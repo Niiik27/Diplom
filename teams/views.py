@@ -238,7 +238,7 @@ class TeamView(ListView):
 
         team = self.model.objects.filter(brigadir=brigadir)
         context['team'] = team
-
+        context['brigadir'] = brigadir
 
         for specialisation in team:
             print(specialisation.specialisation,specialisation.brigadir)

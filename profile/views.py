@@ -30,6 +30,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         user = self.request.user
         context['user'] = user
         profile_user = context['object']
@@ -152,15 +153,20 @@ class UserUpdateView(UpdateView):
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
-        if user.status_id != len(Status.objects.all()):
+        if user.status_id < len(Status.objects.all())-1:
 
             form = EditUserForm(instance=user)
+            context = {'form': form}
+        elif user.status_id != len(Status.objects.all()):
+
+            form = EditProrabForm(instance=user)
             context = {'form': form}
         else:
             form = EditCustomerForm(instance=user)
             context = {'form': form}
         form.fields.pop('password1')
         form.fields.pop('password2')
+        # print('context', context)
 
         context['address_form'] = AddressForm(instance=user.address)
         user_social_profiles = UserSocial.objects.filter(user=user)

@@ -61,7 +61,6 @@ document.getElementById('addRowBtn').addEventListener('click', function () {
     deleteButton.id = `newBtn_${newIndex}`;
     // document.querySelectorAll('[id^="newBtn_"]').forEach(button => {
     deleteButton.addEventListener('click', function() {
-        console.log("ddddddddddddddddddddddddd");
         let rowId = this.id.split('_')[1]; // Получаем номер строки из id кнопки
         document.querySelector(`#new_${rowId}`).remove(); // Удаляем строку из разметки
     // });

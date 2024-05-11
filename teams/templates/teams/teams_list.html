@@ -3,24 +3,41 @@
 {% load static %}
 <main>
     <h3>Свободные вакансии</h3>
-    {% for team in team_list %}
-    <a href="{% url 'profile' team.brigadir.username %}">
-        <p>Бригада: {{ team.brigadir.username }}</p>
-        <p>Должность: {{ team.specialisation.specialisation }}</p>
-        <p>Статус: {{ team.status.name }}</p>
-        <p>Оплата: {{ team.qualify.name }}</p>
-        <p>Разрешения:
-            {% for allow in team.allow.all %}
-                {{ allow.allow }}
+    <table>
+        <thead>
+            <tr>
+                <th>Специализация</th>
+                <th>Прораб</th>
+                <th>Статус</th>
+                <th>Оплата</th>
+                <th>Разрешения</th>
+                <th>Вступить</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for team in team_list %}
+                <tr>
+                    <td>{{ team.specialisation.specialisation }}</td>
+                    <td class="empty-coworker"><a href="{% url 'profile' username=team.brigadir.username %}" class="username">{{ team.brigadir.username }}</a></td>
+                    <td>{{ team.status.name }}</td>
+                    <td>{{ team.qualify.name }}</td>
+                    <td>
+                        <ul>
+                            {% for allow in team.allow.all %}
+                                <li>{{ allow.allow }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td><button class="sendButton" data-team-id="{{ team.id }}">Вступить в бригаду</button></td>
+                </tr>
             {% endfor %}
-        </p>
-    </a>
-        <button class="sendButton" data-team-id="{{ team.id }}">Вступить в бригаду</button>
-
-    {% endfor %}
-
-    <br>
+        </tbody>
+    </table>
 </main>
+
+
+
+
 <script>
     const take_url = "{% url 'join_team' user.username %}";
     const token = "{{ csrf_token }}";

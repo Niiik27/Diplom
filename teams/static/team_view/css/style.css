@@ -9,8 +9,10 @@ th {
     background-color: #696969; /* Цвет фона */
     border: 1px solid #ddd; /* Граница */
     padding: 8px; /* Отступ внутри ячейки */
-    text-align: left; /* Выравнивание текста */
+    text-align: center; /* Выравнивание текста */
     color: black;
+    height:50px;
+
 }
 
 /* Стили для ячеек данных */

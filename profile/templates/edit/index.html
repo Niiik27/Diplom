@@ -11,27 +11,26 @@
 <!--                <button type="submit">Submit</button>-->
 
         {% for field in form %}
-        {% if field.name == 'social_list' %}
-        <div class="form-group">
-            <h2>Соцсети:</h2>
-            <ul>
-                {% for key,value in social_list.items %}
-                <li>
-                    <img src="{% static value.0 %}" alt=key width="50" height="50">
-                    <input type="text" name="social_link" value="{{ value.1 }}" placeholder="{{ key }}">
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% else %}
-        <div class="form-group">{{ field.label_tag }} {{ field }}</div>
-        {% endif %}
+            {% if field.name == 'social_list' %}
+                <div class="form-group">
+                    <h2>Соцсети:</h2>
+                    <ul>
+                        {% for key,value in social_list.items %}
+                        <li>
+                            <img src="{% static value.0 %}" alt=key width="50" height="50">
+                            <input type="text" name="social_link" value="{{ value.1 }}" placeholder="{{ key }}">
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="form-group">{{ field.label_tag }} {{ field }}</div>
+            {% endif %}
         {% endfor %}
         {{ city_form.as_p }}
         {{ address_form.as_p }}
         <h2>Телефон:</h2>
         {{ contacts_form.phone }}
-
 
         <h2>Мессенджеры:</h2>
         <ul>
