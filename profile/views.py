@@ -1,5 +1,6 @@
 import json
-
+from io import BytesIO
+from PIL import Image
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,7 +9,8 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView, View
-
+import requests
+from django.core.files.base import ContentFile
 from Print import Print
 from _Brigada73.socket_client import SOCKET
 from orders.models import Order
@@ -23,7 +25,7 @@ verbose_name = APP_NAMES.PROFILE[APP_NAMES.VERBOSE]
 class ProfileView(LoginRequiredMixin, DetailView):
     model = CustomUser
 
-    template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/index.html'
+    template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/regular.html'
     context_object_name = 'profile_user'
     slug_field = 'username'  # Поле, используемое для идентификации пользователя в URL
     slug_url_kwarg = 'username'  # Параметр в URL, содержащий имя пользователя
@@ -38,6 +40,8 @@ class ProfileView(LoginRequiredMixin, DetailView):
         social_list = SocialList.objects.all()
         if profile_user.status:
             if profile_user.status.name != "Заказ":
+                self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/regular.html'
+
                 sl_res = {}
                 for i in range(len(social_list)):
                     social_name = social_list[i].name
@@ -58,7 +62,10 @@ class ProfileView(LoginRequiredMixin, DetailView):
                 if order is not None:
                     context['order_master'] = order.master
             if profile_user.status.name == 'Прораб':
-                order = Order.objects.get(master=profile_user)
+                try:
+                    order = Order.objects.get(master=profile_user)
+                except Order.DoesNotExist:
+                    order = None
                 if order is not None:
                     context['order_customer'] = order.customer
                 teams = Team.objects.filter(brigadir=user)
@@ -150,6 +157,30 @@ class UserUpdateView(UpdateView):
     form_class = EditUserForm
     template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/index.html'
 
+    def take_image_from_url(self, url):
+        photo_url = url[0]
+        response = requests.get(photo_url)
+        if response.status_code == 200:
+            img_data = BytesIO(response.content)
+            img = Image.open(img_data)
+
+            new_size = (300, 300)
+            img.thumbnail(new_size)
+
+            pathURL = photo_url.split("?")[0]
+            imgExt = pathURL[pathURL.rfind('.') + 1:len(pathURL)]
+            if imgExt.lower() == 'jpg':
+                imgExt = 'jpeg'
+            filename = pathURL.split('/')[-1]
+
+            # Преобразуем изображение в байты
+            buffer = BytesIO()
+            img.save(buffer, format=imgExt)
+            image_file = ContentFile(buffer.getvalue(), name=filename)
+
+            # Сохраняем изображение в поле ImageField
+            # self.image.save(filename, image_file)
+            return image_file
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
@@ -200,6 +231,8 @@ class UserUpdateView(UpdateView):
         # password1 = request.POST['password1']
         # password2 = request.POST['password2']
         # if password1 == password2:
+        photo_url = (request.POST['photo_url']),
+        image = self.take_image_from_url(photo_url)
         username = request.POST['username']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
@@ -222,6 +255,8 @@ class UserUpdateView(UpdateView):
         messengers = request.POST.getlist('messenger')
 
         user.username = username
+        user.photo_url = photo_url[0]
+        user.image = image
         user.first_name = first_name
         user.last_name = last_name
         user.email = email

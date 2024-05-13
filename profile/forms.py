@@ -31,7 +31,7 @@ class EditUserForm(UserCreationForm):
     status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказ', 'Прораб']), label='Статус')
     class Meta:
         model = CustomUser
-        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'birth',
+        fields = ['username', 'password1', 'password2', 'photo_url','image', 'first_name', 'last_name', 'email', 'birth',
                   'specialisation', 'status', 'qualify', 'social_list', 'allow', 'about']
 
         widgets = {

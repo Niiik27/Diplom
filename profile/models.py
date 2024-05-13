@@ -5,6 +5,8 @@ import APP_NAMES
 
 
 class CustomUser(AbstractUser):
+    photo_url = models.CharField('Ссылка на фото', max_length=256, blank=True)
+    image = models.ImageField('Изображение', upload_to=f'{APP_NAMES.PROFILE[APP_NAMES.NAME]}/image', blank=True)
     first_name = models.CharField(verbose_name='Имя', max_length=250, blank=True, null=True)
     last_name = models.CharField(verbose_name='Фамилия', max_length=250, blank=True, null=True)
     email = models.CharField(verbose_name="Почта", max_length=254, null=True, blank=True)

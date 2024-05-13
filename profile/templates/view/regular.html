@@ -1,20 +1,57 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
-<main>
-    <h1 class="head_1">
-        {% if profile_user %}
-            {% if profile_user.status %}
-                {{ profile_user.status }}
-            {% endif %}
-            {% if profile_user.first_name %}
-                {{ profile_user.first_name }}
-            {% endif %}
-            {% if profile_user.last_name %}
-                {{ profile_user.last_name }}
-            {% endif %}
+<main class="main">
+    <section class = "base-info">
+        <h2 class="head-info">{{ profile_user.username }}</h2>
+            <ul class = "status-row">
+                <li class="status-item">
+                    {% if profile_user.status %}
+                    {{ profile_user.status }}
+                    {% endif %}
+                </li>
+                <li class="status-item">
+                    {% if profile_user.qualify %}
+                    {{ profile_user.qualify }}
+                    {% endif %}
+                </li>
+            </ul>
+        {% if profile_user.image %}
+        <img src="{{ profile_user.image.url }}" alt="" class="user-image">
         {% endif %}
-    </h1>
+        <h2 class="user-name">
+                {% if profile_user %}
+                    {% if profile_user.first_name %}
+                        {{ profile_user.first_name }}
+                    {% endif %}
+                    {% if profile_user.last_name %}
+                        {{ profile_user.last_name }}
+                    {% endif %}
+                {% endif %}
+            </h2>
+        <p class="user-city">
+        {% if profile_user.address.city %}
+            {{ profile_user.address.city }}
+        {% endif %}
+        </p>
+        <p class="user-about">
+            {% if profile_user.about %}
+                {{ profile_user.about }}
+            {% endif %}
+        </p>
+        <p>
+            {% if social_list.items %}
+                <ul class="user-social">
+                    {% for key,value in social_list.items %}
+                        <li class="user-social-item">
+                            {# key #} <a href="{{ value.1 }}"><img src="{% static value.0 %}" alt="{{ key }}" class="user-social-ico"></a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+    </section>
+
     <p>
         {% if profile_user.birth %}
             {% if user.status.name != 'Заказ' %}
