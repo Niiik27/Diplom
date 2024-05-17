@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Forms Customization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        h2 {
+            color: #333;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Кастомизация форм в Django</h1>
+    <p>Работа с Django формами может показаться сложной, особенно если вам нужно кастомизировать их внешний вид и поведение. Однако, преимущества использования форм в Django заключаются в автоматической валидации данных, удобстве работы с моделями и упрощенной обработке форм на сервере. Если вам удобнее работать с шаблонами и вручную настраивать HTML и CSS, это тоже вполне разумный подход.</p>
+
+    <h2>Использование crispy-forms</h2>
+    <p><code>django-crispy-forms</code> - это пакет, который значительно упрощает стилизацию форм в Django. Он позволяет вам быстро и легко применять стили к вашим формам, используя различные CSS фреймворки, такие как Bootstrap.</p>
+
+    <h3>Установка crispy-forms</h3>
+    <pre><code>pip install django-crispy-forms</code></pre>
+
+    <h3>Настройка в settings.py</h3>
+    <pre><code>INSTALLED_APPS = [
+    # другие приложения
+    'crispy_forms',
+    'crispy_bootstrap5',  # для использования с Bootstrap 5, можно заменить на другой фреймворк
+]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"  # укажите используемый CSS фреймворк
+CRISPY_TEMPLATE_PACK = "bootstrap5"  # укажите используемый CSS фреймворк</code></pre>
+
+    <h3>Использование в форме</h3>
+    <p>Вам не нужно вносить изменения в ваш класс формы. Просто подключите <code>crispy_forms</code> в ваш шаблон:</p>
+    <pre><code>{% raw %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit">Submit</button>
+</form>
+{% endraw %}</code></pre>
+
+    <h2>Кастомизация форм в шаблоне</h2>
+    <p>Если вы предпочитаете работать напрямую с шаблонами, вы можете рендерить каждое поле формы отдельно, чтобы лучше контролировать их внешний вид.</p>
+
+    <h3>Пример использования формы в шаблоне</h3>
+    <pre><code>{% raw %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Логин</label>
+        {{ form.username }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+        {{ form.password1 }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+        {{ form.password2 }}
+    </div>
+    <!-- Остальные поля формы -->
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endraw %}</code></pre>
+
+    <h3>Добавление классов вручную в шаблоне</h3>
+    <p>Вы можете добавлять классы к полям формы прямо в шаблоне, если это нужно.</p>
+    <pre><code>{% raw %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Логин</label>
+        {{ form.username|add_class:"form-control" }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+        {{ form.password1|add_class:"form-control" }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+        {{ form.password2|add_class:"form-control" }}
+    </div>
+    <!-- Остальные поля формы -->
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endraw %}</code></pre>
+
+    <p>Для использования фильтра <code>add_class</code>, вам нужно создать кастомный фильтр. Создайте файл <code>templatetags/custom_filters.py</code>:</p>
+    <pre><code>from django import template
+
+register = template.Library()
+
+@register.filter(name='add_class')
+def add_class(field, css_class):
+    return field.as_widget(attrs={"class": css_class})</code></pre>
+
+    <p>И зарегистрируйте его в вашем шаблоне:</p>
+    <pre><code>{% raw %}
+{% load custom_filters %}
+{% endraw %}</code></pre>
+
+    <p>Этот метод позволяет комбинировать удобство встроенной валидации Django форм с полной гибкостью настройки их внешнего вида в шаблоне.</p>
+</body>
+</html>

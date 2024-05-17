@@ -2,6 +2,7 @@
     --header-height: 40px;
     --header-color: #343c3d;
     --page-width: 440px;
+    --base-edit-info-width:600px;
 }
 
 * {
@@ -38,16 +39,16 @@ li {
 }
 body {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     margin-top: var(--header-height);
-    height:100%;
-    max-width: 1440px;
-    width:1440px;
+    height:auto;
+    width:100%;
     /*padding-top: var(--header-height);*/
     padding-bottom: var(--header-height);
     /*background: seashell;*/
     background-color: #363434;
-    z-index:-9999;
+    z-index:-9999999;
+    justify-content: center;
 }
 
 header {

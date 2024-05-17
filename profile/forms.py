@@ -28,17 +28,42 @@ class EditUserForm(UserCreationForm):
         help_text="Выберите дату рождения",
         required=False
     )
-    status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказ', 'Прораб']), label='Статус')
+    status = forms.ModelChoiceField(
+        queryset=Status.objects.exclude(name__in=['Заказ', 'Прораб']),
+        label='Статус',
+        widget=forms.Select(attrs={'class': 'form-listbox'})
+    )
+    qualify = forms.ModelChoiceField(
+        queryset=Qualify.objects.all(),
+        label='Квалификация',
+        widget=forms.Select(attrs={'class': 'form-listbox'})
+    )
+    username = forms.CharField(
+        label="Логин",
+        widget=forms.TextInput(attrs={'class': 'form-input'})
+    )
+
     class Meta:
         model = CustomUser
-        fields = ['username', 'password1', 'password2', 'photo_url','image', 'first_name', 'last_name', 'email', 'birth',
-                  'specialisation', 'status', 'qualify', 'social_list', 'allow', 'about']
+        fields = ['username', 'password1', 'password2', 'photo_url','first_name', 'last_name', 'email', 'birth',
+                  'specialisation', 'allow', 'status', 'qualify', 'about', 'social_list']
 
         widgets = {
-            'social_list': forms.CheckboxSelectMultiple,
-            'allow': forms.CheckboxSelectMultiple,
-            'specialisation': forms.CheckboxSelectMultiple,
+            'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'photo_url': forms.URLInput(attrs={'class': 'form-input'}),
+            # 'image': forms.ClearableFileInput(attrs={'class': 'form-input'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'social_list': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'allow': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            # 'qualify': forms.TextInput(attrs={'class': 'form-input'}),
+            'about': forms.Textarea(attrs={'class': 'form-textarea'}),
         }
+
+
 
     def __init__(self, *args, **kwargs):
         if args:
@@ -263,10 +288,21 @@ class CityForm(forms.ModelForm):
 
 
 class AddressForm(forms.ModelForm):
+    city = forms.ModelChoiceField(
+        queryset=City.objects.all(),
+        label='Город',
+        widget=forms.Select(attrs={'class': 'form-listbox'})
+    )
     class Meta:
         model = Address
         fields = ['city', 'district', 'street', 'house_number', 'apartment', 'postal_code']
-
+        widgets = {
+                'district': forms.TextInput(attrs={'class': 'form-input'}),
+                'street': forms.TextInput(attrs={'class': 'form-input'}),
+                'house_number': forms.TextInput(attrs={'class': 'form-input'}),
+                'apartment': forms.TextInput(attrs={'class': 'form-input'}),
+                'postal_code': forms.TextInput(attrs={'class': 'form-input'}),
+            }
 
 class UserSocialForm(forms.ModelForm):
     class Meta:
@@ -287,11 +323,18 @@ class MessengerListForm(forms.ModelForm):
 
 
 class ContactsForm(forms.ModelForm):
+    phone = forms.CharField(
+        label="Телефон:",
+        widget=forms.TextInput(attrs={'class': 'form-input'})
+    )
+
     class Meta:
         model = Contacts
         fields = ['phone', 'messenger']
+
         widgets = {
-            'messenger': forms.CheckboxSelectMultiple(attrs={'class': 'messenger-checkbox'}),
+            'messenger': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input'}),
         }
 
     # def get_messenger_label(self, messenger):
