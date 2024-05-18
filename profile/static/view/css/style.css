@@ -16,7 +16,7 @@
 }
 
 .base-info {
-    border-radius: 15px;
+    border-radius: 15px 15px 0 0;
     background-color: rgba(86, 86, 86, 0.72);
     display: flex;
     flex-direction: column;
@@ -40,6 +40,19 @@
     justify-content: space-between;
 }
 
+.customer-info-item {
+    /*background-color: rgba(86, 86, 86, 0.72);*/
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    width: 350px;
+    height: auto;
+    padding: 20px 0;
+    justify-content: space-between;
+}
+
 .head-spec-info {
     font-weight: bold;
     text-transform: capitalize;
@@ -50,16 +63,17 @@
 }
 
 .list-spec-info {
+    background-color: #656565;
 }
 
 
 ul .row-spec-info:nth-child(even) {
-    background-color: #656565;; /* Задаем один оттенок для четных строк */
+    background-color: #656565;
 }
 
 /* Стили для нечетных строк */
 ul .row-spec-info:nth-child(odd) {
-    background-color: #797878;; /* Задаем другой оттенок для нечетных строк */
+    background-color: #797878;
 }
 
 .row-spec-info {
@@ -72,14 +86,38 @@ ul .row-spec-info:nth-child(odd) {
     height: auto;
     padding: 5px 50px;
     justify-content: space-between;
-    padding-left: 50px;
 }
 
+.row-customer-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    position: relative;
+    width: 350px;
+    height: auto;
+    padding: 5px 50px;
+    justify-content: space-between;
+}
+ul .row-customer-info:nth-child(even) {
+    background-color: #656565;
+}
+
+/* Стили для нечетных строк */
+ul .row-customer-info:nth-child(odd) {
+    background-color: #797878;
+}
 .spec-info {
     position: relative;
     display: flex;
     flex-direction: column;
-    height: auto;
+    height: calc(100% + 80px);
+    justify-content: space-between;
+}
+.customer-info {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
 }
 
@@ -137,36 +175,23 @@ ul .row-spec-info:nth-child(odd) {
 
 .user-about {
     padding: 15px;
+    display: flex;
+    height: 300px;
+    width: 100%;
 }
 
 .user-social {
     position: absolute;
-    bottom: 0;
+    top: auto; /* Отменяем значение top, если оно было установлено */
+    bottom: -80px; /* Привязываем блок к низу родительского блока */
+    height:80px;
     width: 100%;
     display: flex;
     flex-direction: row;
     padding: 15px;
-    /*position: relative;*/
     justify-content: space-between;
-    /*width: 350px;*/
     border-top: 2px solid rgba(0, 0, 0, 0.78);
     border-radius: 0 0 15px 15px;
-    background-color: #656565;
-}
-
-.user-mail {
-    position: absolute;
-    bottom: 90px;
-    width: 100%;
-}
-
-.user-messenger {
-    display: flex;
-    flex-direction: row;
-    padding: 15px;
-    position: relative;
-    justify-content: space-evenly;
-    width: 450px;
     background-color: #656565;
 }
 
@@ -181,6 +206,21 @@ ul .row-spec-info:nth-child(odd) {
     width: auto;
     height: 50px;
     object-fit: cover;
+}
+.user-mail {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+}
+
+.user-messenger {
+    display: flex;
+    flex-direction: row;
+    padding: 15px;
+    position: relative;
+    justify-content: space-evenly;
+    width: 450px;
+    background-color: #656565;
 }
 
 .userlinks {

@@ -42,6 +42,11 @@ class EditUserForm(UserCreationForm):
         label="Логин",
         widget=forms.TextInput(attrs={'class': 'form-input'})
     )
+    photo_url = forms.URLField(
+        label="",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input','placeholder':'Вставте сылку на фото из вашей соцсети'})
+    )
 
     class Meta:
         model = CustomUser
@@ -51,12 +56,12 @@ class EditUserForm(UserCreationForm):
         widgets = {
             'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
             'password2': forms.PasswordInput(attrs={'class': 'form-input'}),
-            'photo_url': forms.URLInput(attrs={'class': 'form-input'}),
+            # 'photo_url': forms.URLInput(attrs={'class': 'form-input'}),
             # 'image': forms.ClearableFileInput(attrs={'class': 'form-input'}),
             'first_name': forms.TextInput(attrs={'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input'}),
             'email': forms.EmailInput(attrs={'class': 'form-input'}),
-            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox2'}),
             'social_list': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             'allow': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             # 'qualify': forms.TextInput(attrs={'class': 'form-input'}),
@@ -150,14 +155,35 @@ class EditCustomerForm(UserCreationForm):
         help_text="Выберите дату",
         required=False
     )
-    about = forms.CharField(label="О заказе", required=False, widget=forms.Textarea(attrs={'rows': 4, 'cols': 40}))
-    first_name = forms.CharField(label="Тема заказа", required=False, widget=forms.TextInput())
 
-    # status = forms.ModelChoiceField(queryset=Status.objects.exclude(name__in=['Заказчик', 'Прораб']), label='Статус')
+    qualify = forms.ModelChoiceField(
+        queryset=Qualify.objects.all(),
+        label='Качество',
+        widget=forms.Select(attrs={'class': 'form-listbox'})
+    )
+    username = forms.CharField(
+        label="Логин",
+        widget=forms.TextInput(attrs={'class': 'form-input'})
+    )
+    photo_url = forms.URLField(
+        label="",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Вставте сылку на фото из вашей соцсети'})
+    )
+
+    about = forms.CharField(label="О заказе", required=False, widget=forms.Textarea(attrs={'rows': 4, 'cols': 40, 'class': 'form-textarea'}))
+    first_name = forms.CharField(label="Тема заказа", required=False, widget=forms.TextInput(attrs={'class': 'form-input'}))
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'birth', 'qualify', 'about']
+        fields = ['username', 'password1', 'password2', 'first_name', 'email', 'birth', 'qualify', 'about']
+
+        widgets = {
+            'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'about': forms.Textarea(attrs={'class': 'form-textarea'}),
+        }
 
     def __init__(self, *args, **kwargs):
         if args:

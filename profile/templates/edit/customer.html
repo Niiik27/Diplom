@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main class="main">
+
+    <form  id="userForm" class="user-data" action="{% url 'edit' username=request.user.username %}" method="POST">
+        {% csrf_token %}
+        <section class = "base-info">
+
+            <h2 class="head-info">{% if request.user %}Параметры заказа{% endif %}</h2>
+            <button id="submitButton" type="submit" style="display: none;">Submit</button>
+            <ul class="list-spec-info">
+                {% for field in form %}
+                    {% if field.name == "photo_url" %}
+                        {% if field.value %}
+                            <li class="row-spec-info"><img class="user-image" src="{{ field.value }}" alt="Картинка из соцсети">{{ field.label_tag }} {{ field }}</li>
+                        {% else %}
+                            <li class="row-spec-info"><p class="image-placeholder">soc-img</p>{{ field.label_tag }} {{ field }}</li>
+                        {% endif %}
+                    {% else %}
+                        <li class="row-spec-info">{{ field.label_tag }} {{ field }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            <h2 class="field-header"><span class="row-spec-info">{{ contacts_form.phone.label_tag }}{{ contacts_form.phone }}</span></h2>
+            <ul class="list-spec-info">
+                {% for messenger in contacts_form.messenger.field.queryset %}
+                <li class="row-spec-info">
+                    <p class="custom-checkbox">
+                        <input type="checkbox" name="messenger" id="messenger_{{ messenger.pk }}" value="{{ messenger.pk }}"
+                            {% if messenger.pk in contacts_form.messenger.value %}checked{% endif %}>
+                        <label for="messenger_{{ messenger.pk }}">{{ messenger.name }}</label>
+                    </p>
+                    <img src="{% static messenger.icon_path %}" alt="{{ messenger.name }}" class="user-social-ico">
+                </li>
+                {% endfor %}
+            </ul>
+
+            <h2 class="field-header row-spec-info">{{ address_form.city.label_tag }} {{ address_form.city }}</h2>
+            <ul class="list-spec-info">
+                {% for field in address_form%}
+                     {% if field.name != "city" %}
+                        <li class="row-spec-info">{{ field.label_tag }} {{ field }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
+    </form>
+</main>
+<script src="{% static '' %}{{ page_style }}/js/script.js"></script>
+{% endblock %}
+

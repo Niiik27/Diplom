@@ -1,4 +1,5 @@
- $(document).ready(function () {
+//Это для мастера
+$(document).ready(function () {
         $("#sendButton").click(function () {
             let requestData = {
                 customer_id: cust_id,

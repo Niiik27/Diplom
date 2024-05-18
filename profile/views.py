@@ -32,10 +32,15 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         user = self.request.user
         context['user'] = user
         profile_user = context['object']
+        if profile_user.status:
+            if profile_user.status.name == 'Заказ':
+                return self.customer_profile(context)
+
+
+
         user_social_profiles = UserSocial.objects.filter(user=profile_user)
         social_list = SocialList.objects.all()
         if profile_user.status:
@@ -52,10 +57,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
                             if profile.social_id == i + 1:
                                 sl_res[social_name] = social_ico, profile.link
                                 break
-
                 context['social_list'] = sl_res
-
-
         if profile_user.status:
             if profile_user.status.name == 'Заказ':
                 order = Order.objects.get(customer=profile_user)
@@ -71,36 +73,20 @@ class ProfileView(LoginRequiredMixin, DetailView):
                 teams = Team.objects.filter(brigadir=user)
                 context['teams'] = teams
 
-                    # if team is not None:
-                    #     context['coworkers'] = team.coworker
-                    #     context['specialisations'] = team.specialisation.specialisation
-                    #     context['status'] = team.status
-                    #     context['qualify'] = team.qualify
-                    #     context['city'] = team.city
-                    #     context['allow'] = team.allow
-                    #     context['confirmed'] = team.confirmed
-                # order = Order.objects.get(master=profile_user)
-                # if order is not None:
-                #     context['order_customer'] = order.customer
-                # statuses = Status.objects.exclude(name__in=['Прораб', 'Заказ','Мастер'])
-                # if statuses is not None:
-                #     context['statuses'] = statuses
-                # specialisations = Specialisations.objects.all()
-                # if specialisations is not None:
-                #     context['specialisations'] = specialisations
-                # qualifyes = Qualify.objects.all()
-                # if qualifyes is not None:
-                #     context['qualifies'] = qualifyes
-                # cities = City.objects.all()
-                # if cities is not None:
-                #     context['cities'] = cities
-                # allowances = Allowance.objects.all()
-                # if allowances is not None:
-                #     context['allowances'] = allowances
-
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
 
+        return context
+
+    def customer_profile(self, context):
+        user = self.request.user
+        profile_user = context['object']
+        self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/customer.html'
+        order = Order.objects.get(customer=profile_user)
+        if order is not None:
+            context['order_master'] = order.master
+        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
+        context['username'] = user.username
         return context
 
 
@@ -155,49 +141,88 @@ class UserCreateView(CreateView):
 class UserUpdateView(UpdateView):
     model = CustomUser
     form_class = EditUserForm
-    template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/index.html'
+    template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
 
     def take_image_from_url(self, url):
         photo_url = url[0]
-        response = requests.get(photo_url)
-        if response.status_code == 200:
-            img_data = BytesIO(response.content)
-            img = Image.open(img_data)
+        if photo_url:
+            response = requests.get(photo_url)
+            if response.status_code == 200:
+                img_data = BytesIO(response.content)
+                img = Image.open(img_data)
 
-            new_size = (300, 300)
-            img.thumbnail(new_size)
+                new_size = (300, 300)
+                img.thumbnail(new_size)
 
-            pathURL = photo_url.split("?")[0]
-            imgExt = pathURL[pathURL.rfind('.') + 1:len(pathURL)]
-            if imgExt.lower() == 'jpg':
-                imgExt = 'jpeg'
-            filename = pathURL.split('/')[-1]
+                pathURL = photo_url.split("?")[0]
+                imgExt = pathURL[pathURL.rfind('.') + 1:len(pathURL)]
+                if imgExt.lower() == 'jpg':
+                    imgExt = 'jpeg'
+                filename = pathURL.split('/')[-1]
 
-            # Преобразуем изображение в байты
-            buffer = BytesIO()
-            img.save(buffer, format=imgExt)
-            image_file = ContentFile(buffer.getvalue(), name=filename)
+                # Преобразуем изображение в байты
+                buffer = BytesIO()
+                img.save(buffer, format=imgExt)
+                image_file = ContentFile(buffer.getvalue(), name=filename)
 
-            # Сохраняем изображение в поле ImageField
-            # self.image.save(filename, image_file)
-            return image_file
+                # Сохраняем изображение в поле ImageField
+                # self.image.save(filename, image_file)
+                return image_file
+            return None
+        return None
+
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
         if user.status:
             match user.status.name:
                 case 'Заказ':
-                    form = EditCustomerForm(instance=user)#Заказчик
-                    context = {'form': form}
+                    return self.get_customer_form(self, request, *args, **kwargs)
+
+                case 'Прораб':
+                    return self.get_regular_form(self, request, *args, **kwargs)
+
+                case _:
+                    return self.get_regular_form(self, request, *args, **kwargs)
+        else:
+            return self.get_regular_form(self, request, *args, **kwargs)
+
+    def get_customer_form(self, request, *args, **kwargs):
+        user_id = self.request.user.pk
+        user = get_object_or_404(CustomUser, pk=user_id)
+        form = EditCustomerForm(instance=user)
+        context = {'form': form}
+        self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/customer.html'
+        form.fields.pop('password1')
+        form.fields.pop('password2')
+        context['address_form'] = AddressForm(instance=user.address)
+        context['fine_form'] = FineForm()
+        context['contacts_form'] = ContactsForm(instance=user.user_contacts)
+        context['page_style'] = APP_NAMES.EDIT[APP_NAMES.NAME]
+        return self.render_to_response(context)
+
+    def get_regular_form(self, request, *args, **kwargs):
+        user_id = self.request.user.pk
+        user = get_object_or_404(CustomUser, pk=user_id)
+        print(user.status)
+        if user.status:
+            match user.status.name:
                 case 'Заказ':
+                    form = EditCustomerForm(instance=user)
+                    context = {'form': form}
+                    self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/customer.html'
+                case 'Прораб':
                     form = EditProrabForm(instance=user)
                     context = {'form': form}
                 case _:
                     form = EditUserForm(instance=user)
                     context = {'form': form}
+                    self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
         else:
             form = EditUserForm(instance=user)
             context = {'form': form}
+            self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
+
         form.fields.pop('password1')
         form.fields.pop('password2')
         # print('context', context)
@@ -232,10 +257,11 @@ class UserUpdateView(UpdateView):
         # password2 = request.POST['password2']
         # if password1 == password2:
         photo_url = (request.POST['photo_url']),
-        image = self.take_image_from_url(photo_url)
+        if photo_url:
+            image = self.take_image_from_url(photo_url)
         username = request.POST['username']
         first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
+        last_name = request.POST.get('last_name')
         email = request.POST['email']
         birth = request.POST['birth']
         about = request.POST['about']
@@ -258,7 +284,8 @@ class UserUpdateView(UpdateView):
         user.photo_url = photo_url[0]
         user.image = image
         user.first_name = first_name
-        user.last_name = last_name
+        if last_name:
+            user.last_name = last_name
         user.email = email
         if birth:
             user.birth = birth
@@ -284,7 +311,7 @@ class UserUpdateView(UpdateView):
             order, created = Order.objects.get_or_create(customer=user)
             ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
             ws.connect()
-            ws.send_notify("","from_server_notify_new_order")
+            ws.send_notify("", "from_server_notify_new_order")
 
         contact_user = Contacts.objects.get(user=user)
         contact_user.phone = phone
@@ -366,4 +393,3 @@ class CustomUserListView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
         return context
-

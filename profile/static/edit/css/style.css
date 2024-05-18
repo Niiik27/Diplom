@@ -117,17 +117,28 @@ ul .row-spec-info:nth-child(odd) {
 }
 
 .user-image {
-    border-radius: 30px;
-    width: var(--base-edit-info-width);
-    height: auto;
-    padding: 15px;
+    display: flex;
+    border-radius: 5px;
+    width: auto;
+    height: 70px;
+    justify-content: center;
 }
-
+.image-placeholder{
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    width: 120px;
+    height: 70px;
+    justify-content: center;
+    border: 2px solid white;
+    background-color: #464646;
+    text-align: center;
+    justify-items: center;
+}
 .user-name {
     font-weight: lighter;
     text-transform: capitalize;
-    padding: 15px 0;
-    padding-bottom: 0;
+    padding: 15px 0 0;
 }
 
 .user-city {
@@ -136,8 +147,7 @@ ul .row-spec-info:nth-child(odd) {
     border-radius: 5px;
     font-size: 16px;
     justify-content: center;
-    margin: 0 20px;
-    margin-top: 15px;
+    margin: 15px 20px 0;
 }
 
 .user-about {
@@ -183,9 +193,11 @@ ul .row-spec-info:nth-child(odd) {
 }
 
 .user-social-ico {
+    display: flex;
     width: auto;
-    height: 50px;
+    height: 40px;
     object-fit: cover;
+    justify-content: center;
 }
 
 .form-input {
@@ -201,7 +213,7 @@ ul .row-spec-info:nth-child(odd) {
 }
 
 .form-textarea {
-    background: #656565;
+    background: #494949;
     border: none;
     outline: none; /* убирает стандартное выделение */
     color: white; /* цвет текста, можете поменять по своему желанию */
@@ -246,160 +258,55 @@ ul .row-spec-info:nth-child(odd) {
     text-align: left;
 }
 
-/*.form-checkbox {*/
-/*    background: transparent;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    align-items: center;*/
-/*    position: relative;*/
-/*    padding-left: 30px;*/
-/*    margin-bottom: 15px;*/
-/*    cursor: pointer;*/
-/*    font-size: 16px;*/
-/*    user-select: none;*/
-/*    color: white; !* Цвет текста *!*/
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox label {
+    position: relative;
+    padding-left: 25px;
+    cursor: pointer;
+}
+
+.custom-checkbox label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid #007bff;
+    border-radius: 3px;
+    background-color: white;
+}
+/*.form-checkbox{*/
+/*        background-color: rgb(0, 123, 255);*/
+/*    border-color: rgb(0, 123, 255);*/
 /*}*/
+.custom-checkbox input[type="checkbox"]:checked + label::before {
+    background-color: rgb(0, 123, 255);
+    border-color: rgb(0, 123, 255);
+}
 
-/*.form-checkbox input {*/
-/*    position: absolute;*/
-/*    opacity: 0;*/
-/*    cursor: pointer;*/
-/*    height: 0;*/
-/*    width: 0;*/
-/*}*/
+.custom-checkbox label::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    opacity: 0;
+}
 
-/*.checkmark {*/
-/*    position: absolute;*/
-/*    top: 0;*/
-/*    left: 0;*/
-/*    height: 20px;*/
-/*    width: 20px;*/
-/*    background-color: #eee;*/
-/*    border-radius: 4px;*/
-/*}*/
-
-/*.form-checkbox input:checked ~ .checkmark {*/
-/*    background-color: #000; !* Цвет фона при выделении *!*/
-/*}*/
-
-/*.form-checkbox input:checked ~ .checkmark:after {*/
-/*    display: block;*/
-/*}*/
-
-/*.form-checkbox .checkmark:after {*/
-/*    content: "";*/
-/*    position: absolute;*/
-/*    display: none;*/
-/*    left: 7px;*/
-/*    top: 3px;*/
-/*    width: 6px;*/
-/*    height: 12px;*/
-/*    border: solid white;*/
-/*    border-width: 0 3px 3px 0;*/
-/*    transform: rotate(45deg);*/
-/*}*/
-
-
-
-
-
-/** {*/
-/*    font-family: Arial, Helvetica, sans-serif;*/
-/*    color: black;*/
-/*}*/
-
-
-/*.head_1 {*/
-/*    !* background-color: rgb(71, 92, 92,.4); *!*/
-/*    !*background: linear-gradient(to top, rgba(0, 0, 0, .1), rgba(0, 0, 0, .5));*!*/
-/*    padding: 10px;*/
-/*    !* position: relative;*/
-/*    justify-content: center;*/
-/*    align-items: center; *!*/
-/*}*/
-
-/*.card{*/
-/*    padding: 20px;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    justify-content: space-between;*/
-/*    align-items: center;*/
-/*    width: 900px;*/
-/*    !*height: 700px;*!*/
-/*    background-color: #d3cfcf;*/
-/*    border-width: 2px;*/
-/*    border-color: #c4c4c4;*/
-/*    border-style: solid;*/
-/*    border-radius: 20px;*/
-/*    box-shadow: 3px 3px 10px grey;*/
-/*    margin: auto;*/
-
-/*}*/
-
-/*.inputs{*/
-/*    !*background-color: #2f2f2f;*!*/
-/*    display: flex;*/
-/*    flex-direction: row;*/
-/*    width:90%;*/
-/*    height: 80%;*/
-/*    justify-content: space-between;*/
-/*    align-items: center;*/
-/*    justify-self: center;*/
-/*    align-self: auto;*/
-/*}*/
-
-/*.about{*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    align-items: center;*/
-/*    width: 50%;*/
-/*    height: 600%;*/
-/*    position: relative;*/
-/*}*/
-/*.area-container{*/
-/*    display: flex;*/
-/*    background-color: #646464;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    width:333px;*/
-/*    height: 666px;*/
-/*    border-radius: 25px;*/
-/*    border-style: none;*/
-/*}*/
-
-/*textarea.area-container {}*/
-/*.fields{*/
-/*    !*background-color: #525252;*!*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    justify-content: space-between;*/
-/*    align-items: start;*/
-/*    height: 100%;*/
-/*    width:50%;*/
-
-/*}*/
-
-/*.txt-input{*/
-/*    border-radius: 10px;*/
-/*    width:100%;*/
-/*    height:27px;*/
-/*}*/
-
-/*.button{*/
-/*    border-radius: 20px;*/
-/*    padding: 10px 30px;*/
-/*    margin: 10px;*/
-
-/*}*/
-
-/*.photo_img{*/
-/*    display: flex;*/
-/*    justify-content: space-between;*/
-/*    align-items: start;*/
-/*    width:100%;*/
-/*    height:245px;*/
-/*    object-fit:cover;*/
-/*    border-radius:16px;*/
-/*    border: #343c3d solid 5px;*/
-/*    box-shadow: 3px 3px 10px #343c3d;*/
-/*}*/
+.custom-checkbox input[type="checkbox"]:checked + label::after {
+    opacity: 1;
+}

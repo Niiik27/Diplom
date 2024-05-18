@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<main class="main">
+    <section class="user-data">
+        <section class = "base-info">
+            <h2 class="head-info">{{ profile_user.username }}</h2>
+                <ul class = "status-row">
+                    <li class="status-item">
+                        {% if profile_user.status %}
+                        {{ profile_user.status }}
+                        {% endif %}
+                    </li>
+                    <li class="status-item">
+                        {% if profile_user.qualify %}
+                        {{ profile_user.qualify }}
+                        {% endif %}
+                    </li>
+                    <li>
+                        <form id="new_img_form"
+                            action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"
+                              enctype="multipart/form-data" style="display: flex">
+                            {% csrf_token %}
+                            <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">
+                            <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">Написать</button>
+                        </form>
+                    </li>
+                </ul>
+            {% if profile_user.image %}
+                <img src="{{ profile_user.image.url }}" alt="" class="user-image">
+            {% endif %}
+            <h2 class="user-name">
+                {% if profile_user %}
+                    {% if profile_user.first_name %}
+                        {{ profile_user.first_name }}
+                    {% endif %}
+                {% endif %}
+            </h2>
+            <p>{{ profile_user.birth }}</p>
+            <p class="user-city">
+            {% if profile_user.address.city %}
+                {{ profile_user.address.city }}
+            {% endif %}
+            </p>
+            {% if profile_user.address.city or profile_user.address.district or profile_user.address.street or
+            profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code %}
+                <section class = "customer-info-item">
+                    <ul class="list-spec-info">
+                        {% if profile_user.address.district %}
+                            <li class="row-customer-info">Район: {{ profile_user.address.district }}</li>
+                        {% endif %}
+                        {% if profile_user.address.street %}
+                            <li class="row-customer-info">Улица: {{ profile_user.address.street }}</li>
+                        {% endif %}
+                        {% if profile_user.address.house_number %}
+                            <li class="row-customer-info">Номер дома: {{ profile_user.address.house_number }}</li>
+                        {% endif %}
+                        {% if profile_user.address.apartment %}
+                            <li class="row-customer-info">Квартира: {{ profile_user.address.apartment }}</li>
+                        {% endif %}
+                        {% if profile_user.address.postal_code %}
+                            <li class="row-customer-info">Индекс: {{ profile_user.address.postal_code }}</li>
+                        {% endif %}
+                    </ul>
+                </section>
+            {% endif %}
+            <p class="user-mail">{{ profile_user.email }}</p>
+        </section>
+        <section class = "customer-info">
+            {% if profile_user.about %}
+                <section class = "spec-info-item">
+                    <h2 class="head-spec-info">О заказе</h2>
+                    <div class="list-spec-info">
+                        <div class="row-spec-info">
+                            <p class="user-about">{{ profile_user.about }}</p>
+                        </div>
+                    </div>
+                </section>
+            {% endif %}
+            {% if profile_user.address.city or profile_user.address.district or profile_user.address.street or
+            profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code %}
+                <section class = "spec-info-item">
+                    <h2 class="head-spec-info">Адрес</h2>
+                    <ul class="list-spec-info">
+                        {% if profile_user.address.city %}
+                            <li class="row-spec-info">Город: {{ profile_user.address.city }}</li>
+                        {% endif %}
+                        {% if profile_user.address.district %}
+                            <li class="row-spec-info">Район: {{ profile_user.address.district }}</li>
+                        {% endif %}
+                        {% if profile_user.address.street %}
+                            <li class="row-spec-info">Улица: {{ profile_user.address.street }}</li>
+                        {% endif %}
+                        {% if profile_user.address.house_number %}
+                            <li class="row-spec-info">Номер дома: {{ profile_user.address.house_number }}</li>
+                        {% endif %}
+                        {% if profile_user.address.apartment %}
+                            <li class="row-spec-info">Квартира: {{ profile_user.address.apartment }}</li>
+                        {% endif %}
+                        {% if profile_user.address.postal_code %}
+                            <li class="row-spec-info">Индекс: {{ profile_user.address.postal_code }}</li>
+                        {% endif %}
+                    </ul>
+                </section>
+            {% endif %}
+            {% if profile_user.user_contacts.phone %}
+                {% if profile_user.user_contacts.messenger.all %}
+                    <section class = "spec-info-item">
+                        <h2 class="head-spec-info">{{ profile_user.user_contacts.phone }}</h2>
+                        <ul class="user-messenger">
+                            {% for messenger in profile_user.user_contacts.messenger.all %}
+                                <li class="user-social-item">
+                                    <img src="{% static messenger.icon_path %}" alt="{{ messenger.name }}" class="user-social-ico">
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                {% endif %}
+            {% endif %}
+        </section>
+    </section>
+</main>
+
+{% endblock %}
+
