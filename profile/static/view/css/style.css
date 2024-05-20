@@ -36,12 +36,11 @@
     text-align: center;
     position: relative;
     width: 450px;
-    height: auto;
+    /*height: 100%;*/
     justify-content: space-between;
 }
 
 .customer-info-item {
-    /*background-color: rgba(86, 86, 86, 0.72);*/
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -50,20 +49,39 @@
     width: 350px;
     height: auto;
     padding: 20px 0;
+    margin: 20px 0;
     justify-content: space-between;
 }
 
 .head-spec-info {
     font-weight: bold;
     text-transform: capitalize;
+    text-align: center;
+    justify-items: center;
     padding: 10px 0;
     border-bottom: 2px solid rgba(0, 0, 0, 0.78);
     width: 450px;
     background-color: #4b4b4b;
 }
 
+.head-customer-info {
+    font-weight: bold;
+    text-transform: capitalize;
+    padding: 10px 0;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.78);
+    width: 350px;
+    background-color: #4b4b4b;
+}
+
 .list-spec-info {
-    background-color: #656565;
+    /*background-color: #ff0000;*/
+    height: 100%;
+    /*height: calc(100% + 80px);*/
+}
+
+.list-about-info {
+    background-color: #696969;
+    height: 100%;
 }
 
 
@@ -83,7 +101,7 @@ ul .row-spec-info:nth-child(odd) {
     text-align: left;
     position: relative;
     width: 450px;
-    height: auto;
+    height: 30px;
     padding: 5px 50px;
     justify-content: space-between;
 }
@@ -99,14 +117,14 @@ ul .row-spec-info:nth-child(odd) {
     padding: 5px 50px;
     justify-content: space-between;
 }
-ul .row-customer-info:nth-child(even) {
-    background-color: #656565;
-}
+/*ul .row-customer-info:nth-child(even) {*/
+/*    background-color: #656565;*/
+/*}*/
 
-/* Стили для нечетных строк */
-ul .row-customer-info:nth-child(odd) {
-    background-color: #797878;
-}
+/*!* Стили для нечетных строк *!*/
+/*ul .row-customer-info:nth-child(odd) {*/
+/*    background-color: #797878;*/
+/*}*/
 .spec-info {
     position: relative;
     display: flex;
@@ -159,8 +177,7 @@ ul .row-customer-info:nth-child(odd) {
 .user-name {
     font-weight: lighter;
     text-transform: capitalize;
-    padding: 15px 0;
-    padding-bottom: 0;
+    padding: 15px 0 0;
 }
 
 .user-city {
@@ -169,8 +186,7 @@ ul .row-customer-info:nth-child(odd) {
     border-radius: 5px;
     font-size: 16px;
     justify-content: center;
-    margin: 0 20px;
-    margin-top: 15px;
+    margin: 15px 20px 0;
 }
 
 .user-about {
@@ -180,10 +196,17 @@ ul .row-customer-info:nth-child(odd) {
     width: 100%;
 }
 
+.customer-about {
+    padding: 15px;
+    display: flex;
+    height: 600px;
+    width: 100%;
+}
+
 .user-social {
     position: absolute;
     top: auto; /* Отменяем значение top, если оно было установлено */
-    bottom: -80px; /* Привязываем блок к низу родительского блока */
+    bottom: -80px;
     height:80px;
     width: 100%;
     display: flex;
@@ -209,7 +232,8 @@ ul .row-customer-info:nth-child(odd) {
 }
 .user-mail {
     position: absolute;
-    bottom: 10px;
+    /*padding-bottom: 10px;*/
+    bottom:10px;
     width: 100%;
 }
 

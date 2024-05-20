@@ -130,9 +130,113 @@
 
         </section>
     </section>
+</main>
 
+    <p>
+        {% if profile_user.birth %}
+            Дата рождения: {{ profile_user.birth }}
+        {% endif %}
 
-    {% if user == profile_user %}
+        {% if profile_user.email %}
+            Почта: {{ profile_user.email }}
+        {% endif %}
+
+        {% if profile_user.user_contacts.phone %}
+            Телефон: {{ profile_user.user_contacts.phone }}
+        {% endif %}
+    </p>
+    <div>
+        {% if profile_user.user_contacts.phone %}
+            {% if profile_user.user_contacts.messenger.all %}
+                <h2>{{ profile_user.user_contacts.phone }}:</h2>
+                <ul>
+                    {% for messenger in profile_user.user_contacts.messenger.all %}
+                        <li>
+                            <img src="{% static messenger.icon_path %}" alt=messenger.name width="50" height="50">
+                            {{ messenger.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endif %}
+        <div class="userlinks">
+<!--            <form id="new_img_form"-->
+<!--                  action="{% url 'message' recipient=profile_user.username username=username %}" method="POST"-->
+<!--                  enctype="multipart/form-data" style="display: flex">-->
+<!--                {% csrf_token %}-->
+<!--                <input type="hidden" name="receiver_id" value="{{ profile_user.id }}">-->
+<!--                <button id="submitButton" class="userlinks" type="submit" name="edit_btn" value="new_image">-->
+<!--                    {% if user.id != profile_user.id %} Написать в чат {% else %}Сделать заметку{% endif %}</button>-->
+<!--            </form>-->
+                {% if user.id != profile_user.id %}
+                    <a class="userlink" href="{% url 'portfolio' username=profile_user.username %}">Портфолио</a>
+                {% endif %}
+        </div>
+    </div>
+    {% if profile_user.address.city or profile_user.address.district or profile_user.address.street or
+    profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code %}
+        <h2>Адрес:</h2>
+        <ul>
+            {% if profile_user.address.city %}
+                <li>Город: {{ profile_user.address.city }}</li>
+            {% endif %}
+            {% if profile_user.address.district %}
+                <li>Район: {{ profile_user.address.district }}</li>
+            {% endif %}
+            {% if profile_user.address.street %}
+                <li>Улица: {{ profile_user.address.street }}</li>
+            {% endif %}
+            {% if profile_user.address.house_number %}
+                <li>Номер дома: {{ profile_user.address.house_number }}</li>
+            {% endif %}
+            {% if profile_user.address.apartment %}
+                <li>Квартира: {{ profile_user.address.apartment }}</li>
+            {% endif %}
+            {% if profile_user.address.postal_code %}
+                <li>Индекс: {{ profile_user.address.postal_code }}</li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    {% if profile_user.qualify %}
+        <h2>Квалификация:</h2>
+        <p>{{ profile_user.qualify }}</p>
+    {% endif %}
+    {% if profile_user.about %}
+        <h2>О себе:</h2>
+        <p>{{ profile_user.about }}</p>
+    {% endif %}
+        <h2>Специализации:</h2>
+        <ul>
+            {% for specialization in profile_user.specialisation.all %}
+                <li>{{ specialization }}</li>
+            {% endfor %}
+        </ul>
+        <h2>Разрешения:</h2>
+        <ul>
+            {% for allowance in profile_user.allow.all %}
+                <li>{{ allowance }}</li>
+            {% endfor %}
+        </ul>
+        {% if social_list.items %}
+            <h2>Соцсети:</h2>
+            <ul>
+                {% for key,value in social_list.items %}
+                    <li>
+                        <img src="{% static value.0 %}" alt=key width="50" height="50">
+                        {{ key }} <a href="{{ value.1 }}">{{ value.1 }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% if profile_user.fine.all %}
+            <h2>Замечания:</h2>
+            <ul>
+                {% for fine in profile_user.fine.all %}
+                <li>{{ fine.fine }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    <br>
+        {% if user == profile_user %}
             {% if user.status.name == 'Прораб' %}
                 <h2><a href="{% url 'profile' username=order_customer.username %}">Ваш заказ: {{ order_customer.username }}.</a></h2>
                 <h2><a href="{% url 'teams' username=user.username %}">Ваша бригада</a></h2>
@@ -144,7 +248,25 @@
                 {% endif %}
             {% endif %}
         {% endif %}
-</main>
+    {% else %}
+        {% if user.status.name == 'Мастер' %}
+            {% if order_master %}
+                <div>Заказ в работе</div>
+            {% else %}
+                <button id="sendButton">Взять заказ</button>
+            {% endif %}
+            {% if user.status.name == 'Прораб' %}
+                {% if order_master %}
+                    {% if order_master == user %}
+                        <div>Вы прораб на этом объекте</div>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+
+
 {% if request.user.status.name == 'Мастер' %}
 <script>
     const cust_id = "{{ profile_user.id }}";

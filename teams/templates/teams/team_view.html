@@ -2,6 +2,7 @@
 {% block content %}
 {% load static %}
 <main>
+    {% if brigadir %}
     <h2>Просмотр бригады <a href="{% url 'profile' username=brigadir %}" class="username">{{ brigadir }}</a></h2>
     <table>
         <thead>
@@ -36,6 +37,7 @@
             {% endfor %}
         </tbody>
     </table>
+{% endif %}
 </main>
 <script>
     const take_url = "{% url 'join_team' user.username %}";

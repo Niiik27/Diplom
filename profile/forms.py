@@ -176,7 +176,7 @@ class EditCustomerForm(UserCreationForm):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'password1', 'password2', 'first_name', 'email', 'birth', 'qualify', 'about']
+        fields = ['username', 'password1', 'password2', 'photo_url', 'first_name', 'email', 'birth', 'qualify', 'about']
 
         widgets = {
             'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
@@ -247,14 +247,39 @@ class EditProrabForm(UserCreationForm):
         help_text="Выберите дату рождения",
         required=False
     )
+    qualify = forms.ModelChoiceField(
+        queryset=Qualify.objects.all(),
+        label='Квалификация',
+        widget=forms.Select(attrs={'class': 'form-listbox'})
+    )
+    username = forms.CharField(
+        label="Логин",
+        widget=forms.TextInput(attrs={'class': 'form-input'})
+    )
+    photo_url = forms.URLField(
+        label="",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Вставте сылку на фото из вашей соцсети'})
+    )
     class Meta:
         model = CustomUser
-        fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'birth',
+        fields = ['username', 'password1', 'password2', 'photo_url', 'first_name', 'last_name', 'email', 'birth',
                   'specialisation', 'qualify', 'social_list', 'allow', 'about']
+        # widgets = {
+        #     'social_list': forms.CheckboxSelectMultiple,
+        #     'allow': forms.CheckboxSelectMultiple,
+        #     'specialisation': forms.CheckboxSelectMultiple,
+        # }
         widgets = {
-            'social_list': forms.CheckboxSelectMultiple,
-            'allow': forms.CheckboxSelectMultiple,
-            'specialisation': forms.CheckboxSelectMultiple,
+            'password1': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-input'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox2'}),
+            'social_list': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'allow': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
+            'about': forms.Textarea(attrs={'class': 'form-textarea'}),
         }
     def __init__(self, *args, **kwargs):
         if args:
@@ -362,6 +387,8 @@ class ContactsForm(forms.ModelForm):
             'messenger': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             'phone': forms.TextInput(attrs={'class': 'form-input'}),
         }
+
+
 
     # def get_messenger_label(self, messenger):
     #     return f'<img src="{messenger.icon_path}" alt="{messenger.name}" class="messenger-icon"> {messenger.name}'

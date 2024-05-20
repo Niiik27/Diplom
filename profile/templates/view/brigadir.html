@@ -4,12 +4,14 @@
 <main class="main">
     <section class="user-data">
         <section class = "base-info">
-            <h2 class="head-info">{{ profile_user.username }}</h2>
+            <h2 class="head-info">{{ profile_user.username }} - {{ profile_user.status }}</h2>
                 <ul class = "status-row">
-                    <li class="status-item">
+                    <li>
                         {% if profile_user.status %}
-                        {{ profile_user.status }}
+                        <a class="userlinks" href="{% url 'teams' username=user.username %}">Бригада</a>
                         {% endif %}
+
+
                     </li>
                     <li class="status-item">
                         {% if profile_user.qualify %}
@@ -64,6 +66,8 @@
             </p>
         </section>
         <section class = "spec-info">
+            <h2 class="head-spec-info">Заказ: <a class="userlinks"  href="{% url 'profile' username=order_customer.username %}">{{ order_customer.username }}.</a></h2>
+
             <section class = "spec-info-item">
                 <h2 class="head-spec-info">Специализации</h2>
                 <ul class="list-spec-info">
@@ -130,28 +134,6 @@
 
         </section>
     </section>
-
-
-    {% if user == profile_user %}
-            {% if user.status.name == 'Прораб' %}
-                <h2><a href="{% url 'profile' username=order_customer.username %}">Ваш заказ: {{ order_customer.username }}.</a></h2>
-                <h2><a href="{% url 'teams' username=user.username %}">Ваша бригада</a></h2>
-            {% endif %}
-        {% else %}
-            {% if user.status.name != 'Мастер' and user.status.name != 'Прораб' %}
-                {% if profile_user.status.name == 'Прораб' %}
-                    <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
-                {% endif %}
-            {% endif %}
-        {% endif %}
 </main>
-{% if request.user.status.name == 'Мастер' %}
-<script>
-    const cust_id = "{{ profile_user.id }}";
-    const take_url = "{% url 'take' customer=profile_user.username %}";
-    const token = "{{ csrf_token }}";
-</script>
-<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
-{% endif %}
 {% endblock %}
 

@@ -36,7 +36,6 @@
                     {% endif %}
                 {% endif %}
             </h2>
-            <p>{{ profile_user.birth }}</p>
             <p class="user-city">
             {% if profile_user.address.city %}
                 {{ profile_user.address.city }}
@@ -64,61 +63,40 @@
                     </ul>
                 </section>
             {% endif %}
-            <p class="user-mail">{{ profile_user.email }}</p>
-        </section>
-        <section class = "customer-info">
-            {% if profile_user.about %}
-                <section class = "spec-info-item">
-                    <h2 class="head-spec-info">О заказе</h2>
-                    <div class="list-spec-info">
-                        <div class="row-spec-info">
-                            <p class="user-about">{{ profile_user.about }}</p>
-                        </div>
-                    </div>
-                </section>
-            {% endif %}
-            {% if profile_user.address.city or profile_user.address.district or profile_user.address.street or
-            profile_user.address.house_number or profile_user.address.apartment or profile_user.address.postal_code %}
-                <section class = "spec-info-item">
-                    <h2 class="head-spec-info">Адрес</h2>
-                    <ul class="list-spec-info">
-                        {% if profile_user.address.city %}
-                            <li class="row-spec-info">Город: {{ profile_user.address.city }}</li>
-                        {% endif %}
-                        {% if profile_user.address.district %}
-                            <li class="row-spec-info">Район: {{ profile_user.address.district }}</li>
-                        {% endif %}
-                        {% if profile_user.address.street %}
-                            <li class="row-spec-info">Улица: {{ profile_user.address.street }}</li>
-                        {% endif %}
-                        {% if profile_user.address.house_number %}
-                            <li class="row-spec-info">Номер дома: {{ profile_user.address.house_number }}</li>
-                        {% endif %}
-                        {% if profile_user.address.apartment %}
-                            <li class="row-spec-info">Квартира: {{ profile_user.address.apartment }}</li>
-                        {% endif %}
-                        {% if profile_user.address.postal_code %}
-                            <li class="row-spec-info">Индекс: {{ profile_user.address.postal_code }}</li>
-                        {% endif %}
-                    </ul>
-                </section>
-            {% endif %}
+            <p class="user-mail">{{ profile_user.email }} {{ profile_user.user_contacts.phone }}</p>
+<!--            <h2 class="head-customer-info">{{ profile_user.user_contacts.phone }}</h2>-->
             {% if profile_user.user_contacts.phone %}
                 {% if profile_user.user_contacts.messenger.all %}
-                    <section class = "spec-info-item">
-                        <h2 class="head-spec-info">{{ profile_user.user_contacts.phone }}</h2>
-                        <ul class="user-messenger">
+<!--                    <section class = "customer-info-item">-->
+                        <ul class="user-social">
                             {% for messenger in profile_user.user_contacts.messenger.all %}
-                                <li class="user-social-item">
-                                    <img src="{% static messenger.icon_path %}" alt="{{ messenger.name }}" class="user-social-ico">
+                            <li class="user-social-item">
+                                <img src="{% static messenger.icon_path %}" alt="{{ messenger.name }}" class="user-social-ico">
                                 </li>
                             {% endfor %}
                         </ul>
-                    </section>
+<!--                    </section>-->
                 {% endif %}
             {% endif %}
         </section>
-    </section>
+        <section class = "customer-info">
+                {% if profile_user.about %}
+                    <section class = "spec-info-item">
+                        <h2 class="head-spec-info">О заказе</h2>
+                        <div class="list-about-info">
+<!--                            <div class="row-spec-info">-->
+                                <p class="customer-about">{{ profile_user.about }}</p>
+<!--                            </div>-->
+                        </div>
+                    </section>
+                {% endif %}
+                {% if profile_user.birth %}
+                <section class = "user-social">
+                    <p>Срок до: {{ profile_user.birth }}</p>
+                </section>
+            {% endif %}
+            </section>
+        </section>
 </main>
 
 {% endblock %}

@@ -36,47 +36,18 @@ class ProfileView(LoginRequiredMixin, DetailView):
         context['user'] = user
         profile_user = context['object']
         if profile_user.status:
-            if profile_user.status.name == 'Заказ':
-                return self.customer_profile(context)
+            match profile_user.status.name:
+                case 'Заказ':
+                    return self.customer_profile(context)
+                case 'Прораб':
+                    return self.brigadir_profile(context)
+                case 'Мастер':
+                    return self.master_profile(context)
+                case _:
+                    return self.regular_profile(context)
+        else:
+            return self.regular_profile(context)
 
-
-
-        user_social_profiles = UserSocial.objects.filter(user=profile_user)
-        social_list = SocialList.objects.all()
-        if profile_user.status:
-            if profile_user.status.name != "Заказ":
-                self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/regular.html'
-
-                sl_res = {}
-                for i in range(len(social_list)):
-                    social_name = social_list[i].name
-                    social_ico = social_list[i].icon_path
-                    for j in range(len(user_social_profiles)):
-                        profile = user_social_profiles[j]
-                        if len(profile.link) > 0:
-                            if profile.social_id == i + 1:
-                                sl_res[social_name] = social_ico, profile.link
-                                break
-                context['social_list'] = sl_res
-        if profile_user.status:
-            if profile_user.status.name == 'Заказ':
-                order = Order.objects.get(customer=profile_user)
-                if order is not None:
-                    context['order_master'] = order.master
-            if profile_user.status.name == 'Прораб':
-                try:
-                    order = Order.objects.get(master=profile_user)
-                except Order.DoesNotExist:
-                    order = None
-                if order is not None:
-                    context['order_customer'] = order.customer
-                teams = Team.objects.filter(brigadir=user)
-                context['teams'] = teams
-
-        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
-        context['username'] = user.username
-
-        return context
 
     def customer_profile(self, context):
         user = self.request.user
@@ -85,6 +56,96 @@ class ProfileView(LoginRequiredMixin, DetailView):
         order = Order.objects.get(customer=profile_user)
         if order is not None:
             context['order_master'] = order.master
+        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
+        context['username'] = user.username
+        return context
+
+    def brigadir_profile(self, context):
+        user = self.request.user
+        profile_user = context['object']
+        user_social_profiles = UserSocial.objects.filter(user=profile_user)
+        social_list = SocialList.objects.all()
+        self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/brigadir.html'
+
+        sl_res = {}
+        for i in range(len(social_list)):
+            social_name = social_list[i].name
+            social_ico = social_list[i].icon_path
+            for j in range(len(user_social_profiles)):
+                profile = user_social_profiles[j]
+                if len(profile.link) > 0:
+                    if profile.social_id == i + 1:
+                        sl_res[social_name] = social_ico, profile.link
+                        break
+        context['social_list'] = sl_res
+        try:
+            order = Order.objects.get(master=profile_user)
+        except Order.DoesNotExist:
+            order = None
+        if order is not None:
+            context['order_customer'] = order.customer
+        teams = Team.objects.filter(brigadir=user)
+        context['teams'] = teams
+        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
+        context['username'] = user.username
+        return context
+
+    def master_profile(self, context):
+        user = self.request.user
+        profile_user = context['object']
+        user_social_profiles = UserSocial.objects.filter(user=profile_user)
+        social_list = SocialList.objects.all()
+        self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/master.html'
+
+        sl_res = {}
+        for i in range(len(social_list)):
+            social_name = social_list[i].name
+            social_ico = social_list[i].icon_path
+            for j in range(len(user_social_profiles)):
+                profile = user_social_profiles[j]
+                if len(profile.link) > 0:
+                    if profile.social_id == i + 1:
+                        sl_res[social_name] = social_ico, profile.link
+                        break
+        context['social_list'] = sl_res
+        try:
+            order = Order.objects.get(master=profile_user)
+        except Order.DoesNotExist:
+            order = None
+        if order is not None:
+            context['order_customer'] = order.customer
+        teams = Team.objects.filter(brigadir=user)
+        context['teams'] = teams
+        context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
+        context['username'] = user.username
+        return context
+
+    def regular_profile(self, context):
+        user = self.request.user
+        profile_user = context['object']
+        user_social_profiles = UserSocial.objects.filter(user=profile_user)
+        social_list = SocialList.objects.all()
+        self.template_name = f'{APP_NAMES.VIEW[APP_NAMES.NAME]}/regular.html'
+
+        sl_res = {}
+        for i in range(len(social_list)):
+            social_name = social_list[i].name
+            social_ico = social_list[i].icon_path
+            for j in range(len(user_social_profiles)):
+                profile = user_social_profiles[j]
+                if len(profile.link) > 0:
+                    if profile.social_id == i + 1:
+                        sl_res[social_name] = social_ico, profile.link
+                        break
+        context['social_list'] = sl_res
+        try:
+            order = Order.objects.get(master=profile_user)
+        except Order.DoesNotExist:
+            order = None
+        if order is not None:
+            context['order_customer'] = order.customer
+        teams = Team.objects.filter(brigadir=user)
+        context['teams'] = teams
         context['page_style'] = APP_NAMES.VIEW[APP_NAMES.NAME]
         context['username'] = user.username
         return context

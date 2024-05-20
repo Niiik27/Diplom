@@ -234,14 +234,15 @@ class TeamView(ListView):
         context = super().get_context_data(**kwargs)
 
         team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
-        brigadir = team_set.first().brigadir
+        if team_set:
+            brigadir = team_set.first().brigadir
 
-        team = self.model.objects.filter(brigadir=brigadir)
-        context['team'] = team
-        context['brigadir'] = brigadir
+            team = self.model.objects.filter(brigadir=brigadir)
+            context['team'] = team
+            context['brigadir'] = brigadir
 
-        for specialisation in team:
-            print(specialisation.specialisation,specialisation.brigadir)
+            for specialisation in team:
+                print(specialisation.specialisation,specialisation.brigadir)
 
 
         # if profile_user.status:

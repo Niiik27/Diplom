@@ -130,28 +130,13 @@
 
         </section>
     </section>
-
-
-    {% if user == profile_user %}
-            {% if user.status.name == 'Прораб' %}
-                <h2><a href="{% url 'profile' username=order_customer.username %}">Ваш заказ: {{ order_customer.username }}.</a></h2>
-                <h2><a href="{% url 'teams' username=user.username %}">Ваша бригада</a></h2>
-            {% endif %}
-        {% else %}
-            {% if user.status.name != 'Мастер' and user.status.name != 'Прораб' %}
-                {% if profile_user.status.name == 'Прораб' %}
-                    <h2><a href="{% url 'profile' username=order_customer.username %}">Заказ {{ order_customer.username }}.</a></h2>
-                {% endif %}
-            {% endif %}
-        {% endif %}
 </main>
-{% if request.user.status.name == 'Мастер' %}
+
 <script>
     const cust_id = "{{ profile_user.id }}";
     const take_url = "{% url 'take' customer=profile_user.username %}";
     const token = "{{ csrf_token }}";
 </script>
 <script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
-{% endif %}
 {% endblock %}
 
