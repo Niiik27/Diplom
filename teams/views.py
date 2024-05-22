@@ -144,18 +144,25 @@ class JoinTeamView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         team_id = request.POST.get('team_id')
         if team_id:
-            Print.yellow(team_id)
+            already_exists = Team.objects.filter(coworker=request.user)
+            if already_exists.exists():
+                team_instance = already_exists.first()
+                if team_instance.coworker is not None:
+                    team_instance.coworker = None
+                    team_instance.save()
 
             team = self.model.objects.get(id=team_id)
-            team.coworker = request.user
-            team.save()
+            if team.coworker != request.user:
+                team.coworker = request.user
+                team.save()
             # Print.yellow(team.brigadir.username, team.coworker.username, team.city.name,team.qualify.name, team.specialisation.specialisation)
 
             if team.coworker is not None:
                 ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
                 ws.connect()
                 ws.send_notify_dara(type = "from_server_notify_coworker_joined", message = "", user_id =self.request.user.id, team_id = team_id)
-
+            # else:
+            #     return JsonResponse({'success': False, 'error': 'Already in team'}, status=400)
 
             return JsonResponse({'success': True})
         else:
@@ -232,8 +239,17 @@ class TeamView(ListView):
     def get_context_data(self, **kwargs):
         Print.yellow("Получили запрос")
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if user.status.name == 'Прораб':
+        # team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
+            team_set = Team.objects.filter(brigadir=user)
+        else:
+            brigadir = Team.objects.filter(coworker=user).first()
+            if brigadir:
+                team_set = Team.objects.filter(brigadir=brigadir.brigadir)
+            else:
+                team_set = None
 
-        team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
         if team_set:
             brigadir = team_set.first().brigadir
 

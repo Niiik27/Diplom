@@ -1,0 +1,27 @@
+<header class="header">
+    {% load static %}
+    <div class="container">
+
+        <div class="avatar">
+            {% if user.is_authenticated == False %}
+                <a href="{% url 'home' %}" class="username">Главная</a>
+            {% else %}
+                {% include "header_avatar.html" %}
+                    {% if request.user.status.name == 'Мастер' %}
+                        <a href="{% url 'orders'  %}">Заказы <span id="orders-total">0</span></a>
+                    {% else %}
+                        <a href="{% url 'team_list'  %}">Заказы <span id="teams-total">0</span></a>
+                    {% endif %}
+                    <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>
+            {% endif %}
+        </div>
+        {% include "header_admin.html" %}
+    </div>
+    <div>{{ page_style }}</div>
+
+    {% if user.is_authenticated %}
+
+        <script src="{% static 'base/js/script.js' %}"></script>
+
+    {% endif %}
+</header>

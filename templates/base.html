@@ -15,10 +15,23 @@
 
 </head>
 <body>
-{% include "header.html" %}
+{% if user.status.name == 'Заказ' %}
+    {% include "header_order.html" %}
+{% else %}
+    {% if user.status.name == 'Прораб' %}
+        {% include "header_brigadir.html" %}
+    {% else %}
+        {% if user.status.name == 'Мастер' %}
+            {% include "header.html" %}
+        {% else %}
+            {% include "header_regular.html" %}
+        {% endif%}
+    {% endif%}
+{% endif %}
 {% block content %}
 {% endblock content %}
 {% include "footer.html" %}
+
 <script src="" integrity="" crossorigin="anonymous"></script>
 
 </body>
