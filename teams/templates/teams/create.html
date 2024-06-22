@@ -52,14 +52,12 @@
                 <div class="select-wrapper">
                     <div class="select-header">Список разрешений</div>
                     <ul class="select-options">
-
-
-                    {% for key,value in spec.allows.items %}
-                        <li>
-                            <input type="checkbox" id="allow-{{ spec.id }}_{{ forloop.counter }}" name="allowances{{ forloop.counter }}" value="{{ forloop.counter }}" {% if value %}checked{% endif %}>
-                            <label for="allow-{{ spec.id }}_{{ forloop.counter }}">{{ key }}</label>
-                        </li>
-                    {% endfor %}
+                        {% for key,value in spec.allows.items %}
+                            <li class="dropdown-item">
+                                <input type="checkbox" id="allow-{{ spec.id }}_{{ forloop.counter }}" name="allowances{{ forloop.counter }}" value="{{ forloop.counter }}" {% if value %}checked{% endif %}>
+                                <label for="allow-{{ spec.id }}_{{ forloop.counter }}">{{ key }}</label>
+                            </li>
+                        {% endfor %}
                     </ul>
                 </div>
             </td>

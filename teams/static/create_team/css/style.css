@@ -90,7 +90,32 @@ input {
 tr:has(td.empty-coworker:empty){
     background-color: #5d2626; /* Красный цвет фона */
 }
+.dropdown-item:hover{
+    /*padding: -90px;*/
+    background-color: #5d2626;
+}
 
+
+
+/*.custom-select .label {*/
+/*    flex-grow: 1;*/
+/*    text-align: left;*/
+/*}*/
+
+.select-header::after {
+    content: '▼'; /* Unicode character for down arrow */
+    margin-left: 8px;
+    pointer-events: none; /* Ensures the arrow doesn't capture click events */
+}
+.select-header.active::after {
+    content: '▲'; /* Change arrow direction when active, if desired */
+}
+/*.select-header:hover::after{*/
+/*    content: '▲'; !* Change arrow direction when active, if desired *!*/
+/*}*/
 /*.hidden{*/
 /*    display: none;*/
 /*}*/
+
+
+

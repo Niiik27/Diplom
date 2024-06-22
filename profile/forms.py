@@ -276,7 +276,7 @@ class EditProrabForm(UserCreationForm):
             'first_name': forms.TextInput(attrs={'class': 'form-input'}),
             'last_name': forms.TextInput(attrs={'class': 'form-input'}),
             'email': forms.EmailInput(attrs={'class': 'form-input'}),
-            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox2'}),
+            'specialisation': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             'social_list': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             'allow': forms.CheckboxSelectMultiple(attrs={'class': 'form-checkbox'}),
             'about': forms.Textarea(attrs={'class': 'form-textarea'}),

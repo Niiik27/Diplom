@@ -1,0 +1,69 @@
+<header class="header">
+    {% load static %}
+    <div class="container">
+        {% include "header_avatar.html" %}
+<!--        {% if user.status.name == 'Заказ' %}-->
+<!--            {% include "header_order.html" %}-->
+<!--        {% else %}-->
+<!--            {% if user.status.name == 'Прораб' %}-->
+<!--                {% include "header_brigadir.html" %}-->
+<!--            {% else %}-->
+<!--                {% if user.status.name == 'Мастер' %}-->
+<!--                    {% include "header.html" %}-->
+<!--                {% else %}-->
+<!--                    {% include "header_regular.html" %}-->
+<!--                {% endif%}-->
+<!--             {% endif%}-->
+<!--        {% endif %}-->
+
+
+<!--        <div class="avatar">-->
+<!--            {% if user.is_authenticated == False %}-->
+<!--                <a href="{% url 'home' %}" class="username">Главная</a>-->
+<!--            {% else %}-->
+<!--                <a href="{% url 'profile' username=user.username %}" class="username">{{ request.user.username }} </a>-->
+<!--                {% if page_style == 'edit' %}-->
+<!--                    <a id="saveLink" href="#" class="" type="button">Сохранить</a>-->
+<!--                {% else %}-->
+<!--                    {% if page_style != 'teams' %}-->
+<!--                        <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>-->
+<!--                        {% if request.user.status.name != 'Заказ' %}-->
+<!--                            <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>-->
+<!--                        {% endif %}-->
+<!--                    {% endif %}-->
+<!--                {% endif %}-->
+<!--                {% if request.user.status.name != 'Заказ' and request.user.status.name != 'Прораб' %}-->
+<!--                    {% if request.user.status.name == 'Мастер' %}-->
+<!--                        <a href="{% url 'orders'  %}">Заказы <span id="orders-total">0</span></a>-->
+<!--                    {% else %}-->
+<!--                        <a href="{% url 'team_list'  %}">Заказы <span id="teams-total">0</span></a>-->
+<!--                    {% endif %}-->
+<!--                    <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>-->
+<!--                {% else %}-->
+<!--                    {% if request.user.status.name == 'Заказ' %}-->
+<!--                        {% if page_style != 'team_view' %}-->
+<!--                            {% if order_master.username %}-->
+<!--                                <a href="{% url 'team_view' order_master.username %}" id="team-complete">Бригада</a>-->
+<!--                            {% endif %}-->
+<!--                        {% endif %}-->
+<!--                    {% else %}-->
+<!--                        {% if request.user.status.name != 'Мастер' %}-->
+<!--                            {% if page_style != 'team_view' %}-->
+<!--                                <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>-->
+<!--                            {% endif %}-->
+<!--                        {% endif %}-->
+<!--                    {% endif %}-->
+
+<!--                {% endif %}-->
+<!--            {% endif %}-->
+<!--        </div>-->
+    {% include "header_admin.html" %}
+    </div>
+
+    <div>{{ page_style }}</div>
+    {% if user.is_authenticated %}
+
+        <script src="{% static 'base/js/script.js' %}"></script>
+
+    {% endif %}
+</header>

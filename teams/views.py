@@ -184,7 +184,7 @@ class TeamsView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
         context['team_list'] = self.filter_coworker_teams(self.request.user)
-        return context
+
 
     def filter_coworker_teams(self, user, qualify=True, status=True, spec=True, allow=True, address=True):
         team_model = self.model
@@ -237,11 +237,17 @@ class TeamView(ListView):
     #     return queryset
 
     def get_context_data(self, **kwargs):
-        Print.yellow("Получили запрос")
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        match(user.status.name ):
+            case 'Заказ':
+                return self.get_order_data(context)
+            case 'Прораб':
+                return self.get_brigadir_data(context)
+
+
         if user.status.name == 'Прораб':
-        # team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
+            # team_set = context[APP_NAMES.TEAM_LIST[APP_NAMES.NAME]]
             team_set = Team.objects.filter(brigadir=user)
         else:
             brigadir = Team.objects.filter(coworker=user).first()
@@ -258,8 +264,12 @@ class TeamView(ListView):
             context['brigadir'] = brigadir
 
             for specialisation in team:
-                print(specialisation.specialisation,specialisation.brigadir)
+                print(specialisation.specialisation, specialisation.brigadir)
 
+        if self.request.user.status.name == 'Заказ':
+            order = Order.objects.get(customer=self.request.user)
+            if order is not None:
+                context['order_master'] = order.master
 
         # if profile_user.status:
         #     if profile_user.status.name == 'Заказ':
@@ -273,11 +283,34 @@ class TeamView(ListView):
         #         teams = Team.objects.filter(brigadir=user)
         #         context['teams'] = teams
 
-
-
         # specialisations = self.model.objects.filter(brigadir__username=context['brigadir'])
         context['page_style'] = APP_NAMES.TEAM_VIEW[APP_NAMES.NAME]
         Print.yellow("Вернулли запрос")
+        return context
+
+    def get_brigadir_data(self,context):
+        user = self.request.user
+        team_set = Team.objects.filter(brigadir=user)
+        if team_set:
+            brigadir = team_set.first().brigadir
+            team = self.model.objects.filter(brigadir=brigadir)
+            context['team'] = team
+            context['brigadir'] = brigadir
+            # for specialisation in team:
+            #     print(specialisation.specialisation,specialisation.brigadir)
+        context['page_style'] = APP_NAMES.TEAM_VIEW[APP_NAMES.NAME]
+        return context
+
+    def get_order_data(self,context):
+        user = self.request.user
+        order = Order.objects.get(customer=user)
+        if order is not None:
+            master = order.master
+            context['order_master'] = master
+            context['brigadir'] = master
+            team_set = Team.objects.filter(brigadir=master)
+            context['team'] = team_set
+        context['page_style'] = APP_NAMES.TEAM_VIEW[APP_NAMES.NAME]
         return context
 
 class TeamDeleteUser(LoginRequiredMixin, TemplateView):
@@ -285,7 +318,6 @@ class TeamDeleteUser(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         team_id = request.POST.get('team_id')
         if team_id:
-            Print.yellow(team_id)
             team = self.model.objects.get(id=team_id)
             team.delete()
 

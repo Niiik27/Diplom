@@ -1,97 +1,167 @@
+/*table{*/
+/*    width: 100%!important;*/
+/*    border-collapse: collapse;*/
+/*}*/
+
+/*!* Стили для ячеек заголовков *!*/
+/*th {*/
+/*    background-color: #696969; !* Цвет фона *!*/
+/*    border: 1px solid #ddd; !* Граница *!*/
+/*    padding: 8px; !* Отступ внутри ячейки *!*/
+/*    text-align: center; !* Выравнивание текста *!*/
+/*    color: black;*/
+/*    height:50px;*/
+
+/*}*/
+
+/*!* Стили для ячеек данных *!*/
+/*td {*/
+/*    border: 1px solid #ddd; !* Граница *!*/
+/*    padding: 8px; !* Отступ внутри ячейки *!*/
+/*    text-align: left; !* Выравнивание текста *!*/
+/*}*/
+/*tr:has(td.empty-coworker:empty){*/
+/*    background-color: #5d2626; !* Красный цвет фона *!*/
+/*}*/
+/*!* Стили для четных строк *!*/
+/*tbody tr:nth-child(even) {*/
+/*    !*background-color: #363434; !* Цвет фона *!*!*/
+/*    background-color: #414040;*/
+/*}*/
 
 
 
-.head_1 {
-    /* background-color: rgb(71, 92, 92,.4); */
-    /*background: linear-gradient(to top, rgba(0, 0, 0, .1), rgba(0, 0, 0, .5));*/
-    padding: 10px;
-    /* position: relative;
-    justify-content: center;
-    align-items: center; */
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Стили для таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+
 }
 
-.card{
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    width: 900px;
-    /*height: 700px;*/
-    background-color: #939393;
-    border-width: 2px;
-    border-color: #c4c4c4;
-    border-style: solid;
-    border-radius: 20px;
-    box-shadow: 3px 3px 10px grey;
-    margin: auto;
+/* Стили для ячеек заголовков */
+th {
+    background-color: #696969; /* Цвет фона */
+    border: 1px solid #ddd; /* Граница */
+    padding: 8px; /* Отступ внутри ячейки */
+    text-align: center; /* Выравнивание текста */
+    color: black;
+    height:50px;
+}
+
+/* Стили для ячеек данных */
+td {
+    border: 1px solid #ddd; /* Граница */
+    padding: 4px; /* Отступ внутри ячейки */
+    text-align: center; /* Выравнивание текста */
 
 }
 
-.inputs{
-    /*background-color: #2f2f2f;*/
-    display: flex;
-    flex-direction: row;
-    width:90%;
-    height: 80%;
-    justify-content: space-between;
-    align-items: center;
-    justify-self: center;
-    align-self: auto;
+tr:has(td.empty-coworker:empty) {
+    background-color: #5d2626; /* Красный цвет фона */
 }
 
-.about{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 50%;
-    height: 600%;
+/* Стили для четных строк */
+tbody tr:nth-child(even) {
+    /*background-color: #363434; !* Цвет фона *!*/
+    background-color: #414040;
+}
+
+select {
+    background-color: black;
+    color: white; /* Цвет текста внутри списка */
+    width: 100%;
+    height: 40px;
+}
+
+input {
+    background-color: black;
+    color: white; /* Цвет текста внутри списка */
+}
+
+/*.scrolling-container {*/
+/*    max-height: 30px; !* Задайте желаемую максимальную высоту *!*/
+/*    overflow-y: auto; !* Включить вертикальную прокрутку *!*/
+/*}*/
+.select-wrapper {
     position: relative;
 }
-.area-container{
+
+.select-header {
     display: flex;
-    background-color: #646464;
-    display: flex;
-    flex-direction: column;
-    width:333px;
-    height: 666px;
-    border-radius: 25px;
-    border-style: none;
+    /*padding: 3px;*/
+    background-color: #656565;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    width: 100%;
+    height: 35px;
+    align-items: center;
+    justify-content: center;
 }
 
-textarea.area-container {}
-.fields{
-    /*background-color: #525252;*/
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: start;
-    height: 100%;
-    width:50%;
-
+.select-options {
+    list-style: none;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #4b4b4b;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1000;
+    justify-content: left;
+    width: auto;
+    text-align: left;
 }
 
-.txt-input{
-    border-radius: 10px;
+.select-options.visible {
+    display: block;
     width:100%;
-    height:27px;
 }
 
-.button{
-    border-radius: 20px;
-    padding: 10px 30px;
-    margin: 10px;
 
+
+tr:has(td.empty-coworker:empty){
+    background-color: #5d2626; /* Красный цвет фона */
+}
+.dropdown-item:hover{
+    /*padding: -90px;*/
+    background-color: #5d2626;
 }
 
-.photo_img{
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    width:100%;
-    height:245px;
-    object-fit:cover;
-    border-radius:16px;
-    border: #343c3d solid 5px;
-    box-shadow: 3px 3px 10px #343c3d;
+
+
+/*.custom-select .label {*/
+/*    flex-grow: 1;*/
+/*    text-align: left;*/
+/*}*/
+
+.select-header::after {
+    content: '▼'; /* Unicode character for down arrow */
+    margin-left: 8px;
+    pointer-events: none; /* Ensures the arrow doesn't capture click events */
 }
+.select-header.active::after {
+    content: '▲'; /* Change arrow direction when active, if desired */
+}
+/*.select-header:hover::after{*/
+/*    content: '▲'; !* Change arrow direction when active, if desired *!*/
+/*}*/
+/*.hidden{*/
+/*    display: none;*/
+/*}*/
+
+
+

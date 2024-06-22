@@ -25,6 +25,7 @@ document.getElementById("message-input").addEventListener("keyup", function (eve
 });
 
 
+
 // const historySocket = new WebSocket('ws://127.0.0.1:8002/ws/history/');
 //
 // historySocket.onopen = function () {

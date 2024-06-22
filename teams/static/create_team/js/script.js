@@ -19,11 +19,15 @@ $(document).ready(function () {
     // Используем делегирование событий для разворачивания/сворачивания выпадающего списка
     $('#teamTable').on('click', '.select-header', function () {
         $(this).siblings(".select-options").toggle();
+            $(this).toggleClass('active');
+
     });
 
     // При уводе мыши с области выпадающего списка, он скрывается
     $('#teamTable').on('mouseleave', '.select-wrapper', function () {
         $(this).find(".select-options").hide();
+    $(this).find(".select-header").removeClass('active');
+
     });
 });
 
@@ -55,16 +59,17 @@ document.getElementById('addRowBtn').addEventListener('click', function () {
         input.value = ''; // Очистить текстовые поля и снять все флажки у чекбоксов
         input.checked = false;
     });
+    newRow.querySelector('[data-column-name="spec_name"]').textContent = "";
 
     // newRow.querySelector('[data-column-name="del-spec"] button').id = `delRowBtn_${newIndex}_new`;
     let deleteButton = newRow.querySelector('[data-column-name="del-spec"] button');
     deleteButton.id = `newBtn_${newIndex}`;
     // document.querySelectorAll('[id^="newBtn_"]').forEach(button => {
-    deleteButton.addEventListener('click', function() {
+    deleteButton.addEventListener('click', function () {
         let rowId = this.id.split('_')[1]; // Получаем номер строки из id кнопки
         document.querySelector(`#new_${rowId}`).remove(); // Удаляем строку из разметки
-    // });
-});
+        // });
+    });
 
 
     document.getElementById('teamTable').getElementsByTagName('tbody')[0].appendChild(newRow);
@@ -169,3 +174,22 @@ document.querySelectorAll('[id^="delRowBtn_"]').forEach(button => {
         }
     });
 });
+
+
+// document.querySelectorAll('.select-header').forEach(header => {
+//     header.addEventListener('click', function () {
+//         header.classList.toggle('active');
+//     });
+//         header.addEventListener('mouseleave', function () {
+//         header.classList.remove('active');
+//     });
+// });
+//
+// // Close dropdown if clicked outside
+// document.addEventListener('click', function (event) {
+//     if (!event.target.closest('.select-header')) {
+//         document.querySelectorAll('.select-header').forEach(wrapper => {
+//             wrapper.classList.remove('active');
+//         });
+//     }
+// });

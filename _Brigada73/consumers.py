@@ -1,6 +1,7 @@
 from asgiref.sync import sync_to_async, async_to_sync
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.db.models import Count
 
 from django.apps import apps
 import json
@@ -100,24 +101,32 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message_type == 'message':
 
             message_id = await self.save_message(sender, receiver, content)
+
+            await self.send(text_data=json.dumps({
+                'type': 'from_me',
+                'status': 'true',
+                'id': -1,
+                'message': content,
+                'sender_name': sender_name,
+                'receiver_name': receiver_name,
+            }))
             if sender_name != receiver_name:
-                await self.send(text_data=json.dumps({
-                    'type': 'from_me',
-                    'status': 'true',
-                    'id': -1,
-                    'message': content,
-                    'sender_name': sender_name,
-                    'receiver_name': receiver_name,
-                }))
-            if group_name in chat_users:
-                await self.send_message(sender_name, receiver_name, group_name, content, message_type, message_id)
-            if receiver_id in online_users:
-                await self.send_notify_about_new_message(group_name)
+                if group_name in chat_users:
+                    await self.send_message(sender_name, receiver_name, group_name, content, message_type, message_id)
+                if receiver_id in online_users:
+                    await self.send_notify_about_new_message(group_name)
 
         elif message_type == 'history':
             messages = await self.get_messages(sender, receiver)
-            await self.send_history(messages)
-
+            await self.send_history(messages,receiver.username)
+    # @database_sync_to_async
+    # def set_status(self, read_ids):
+    #     try:
+    #         message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
+    #         message_model.objects.filter(id__in=read_ids).update(status=True)
+    #         return True
+    #     except Exception as e:
+    #         return False
     @database_sync_to_async
     def get_user_by_id(self, user_id):
         custom_user_model = apps.get_model(app_label=APP_NAMES.PROFILE[APP_NAMES.NAME], model_name='CustomUser')
@@ -126,7 +135,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, sender, receiver, content):
         message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
-        msg = message_model(sender=sender, receiver=receiver, content=content)
+        msg = message_model(sender=sender, receiver=receiver, content=content,status=sender==receiver)
         msg.save()
         return msg.id
 
@@ -147,12 +156,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             })
         return messages_data
 
-    async def send_history(self, messages):
+    async def send_history(self, messages,reciver_name):
+        print(messages)
         await self.send(text_data=json.dumps({
             'type': 'to_me',
             'status': 'true',
             'id': -1,
-            'message': "Добро пожаловать в чат",
+            'message': f"Добро пожаловать в чат c {reciver_name}",
             'sender_name': "Историк",
             'receiver_name': self.scope['user'].username,
         }))
@@ -177,13 +187,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'receiver_name': receiver_name,  # пока не нужный параметр
         })
 
-    @database_sync_to_async
-    def get_total_unread_num(self):
-        me = self.scope['user']
-        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
-        unread_messages = message_model.objects.filter(receiver=me, status=False)
-        unread_messages_count = unread_messages.count()
-        return unread_messages_count
+    # @database_sync_to_async
+    # def get_total_unread_num(self):
+    #     me = self.scope['user']
+    #     message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
+    #     unread_messages = message_model.objects.filter(receiver=me, status=False)
+    #     unread_messages_count = unread_messages.count()
+    #     return unread_messages_count
 
     async def send_notify_about_new_message(self, group_name):
         await self.channel_layer.group_send(group_name, {"type": 'send_notify', 'notify_type': 'new_msg', 'num': 1, })
@@ -276,6 +286,12 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                 }))
                 num = await self.get_total_unread_num()
                 await self.send_total_messages_notify(num)
+        elif notify_type == 'from_client_read_num_unread_by_users':
+            nums_by_sender = await self.get_total_unread_num_by_sender()
+            await self.send(text_data=json.dumps({
+                'type': 'set_unread_nums_by_sender',
+                'unread_nums_by_sender': nums_by_sender
+            }))
         elif notify_type == 'from_server_notify_new_order':  # Это приходит строго из питон клиента, это иммитация коннекта
             user_id = text_data_json['user_id']
             self.user = await self.get_user_by_id(user_id)
@@ -321,7 +337,6 @@ class NotifyConsumer(AsyncWebsocketConsumer):
 
 
 
-            Print.green(group_name)
 
     @database_sync_to_async
     def get_status_name(self):
@@ -363,7 +378,6 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         return customer
     @database_sync_to_async
     def get_total_orders(self):
-
         order_model = apps.get_model(app_label=APP_NAMES.ORDERS[APP_NAMES.NAME], model_name='Order')
         new_orders = order_model.objects.filter(confirmed=False)
         customer_ids = []
@@ -476,6 +490,17 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         unread_messages = message_model.objects.filter(receiver=me, status=False)
         unread_messages_count = unread_messages.count()
         return unread_messages_count
+
+
+    @database_sync_to_async
+    def get_total_unread_num_by_sender(self):
+        me = self.scope['user']
+        message_model = apps.get_model(app_label=APP_NAMES.MESSAGE[APP_NAMES.NAME], model_name='Message')
+        unread_messages = message_model.objects.filter(receiver=me, status=False)
+        unread_messages_by_sender = unread_messages.values('sender').annotate(total=Count('id')).order_by('-total')
+
+        result = [[item['sender'],item['total']] for item in unread_messages_by_sender]
+        return result
 
     async def send_total_messages_notify(self, num):
         await self.channel_layer.group_send(get_chat_channel_name(self.scope['user']), {

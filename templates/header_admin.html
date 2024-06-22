@@ -10,7 +10,12 @@
             {% endif %}
         {% endif %}
     {% else %}
-        <a href="{% url 'users'  %}" type="button">Пользователи <span id="users">0</span></a>
+        {% if page_style == 'users' %}
+            <a href="{% url 'users_edit'  %}" type="button">Редактировать <span id="users"></span></a>
+        {% else %}
+            <a href="{% url 'users'  %}" type="button">Пользователи <span id="users"></span></a>
+        {% endif %}
+
         <a href="{% url 'profile' 'logout' %}" class="" type="button">Выход</a>
         {% if user.is_staff %}
             <a href="{% url 'admin:index' %}" class="admin" type="button">Админка</a>

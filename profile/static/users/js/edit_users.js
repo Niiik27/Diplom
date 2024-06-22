@@ -51,6 +51,24 @@ $(document).ready(function () {
     });
 });
 
+// document.addEventListener('DOMContentLoaded', function() {
+//     const selectElements = document.querySelectorAll('.st-sl');
+//
+//     selectElements.forEach(selectElement => {
+//         selectElement.addEventListener('mouseover', function() {
+//             selectElement.size = selectElement.options.length; // Раскрываем все опции
+//         });
+//
+//         selectElement.addEventListener('mouseleave', function() {
+//             selectElement.size = 16; // Скрываем опции при уходе мыши
+//         });
+//
+//         selectElement.addEventListener('blur', function() {
+//             selectElement.size = 1; // Скрываем опции при потере фокуса
+//         });
+//     });
+// });
+
 // Полный URL страницы
 const fullURL = window.location.href;
 console.log('Full URL:', fullURL);

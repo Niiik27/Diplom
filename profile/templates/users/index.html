@@ -2,20 +2,80 @@
 {% block content %}
 {% load static %}
 <main>
-<div class="container">
-    <div class="">
-        {% for user in customuser_list %}
-        <div class="">
-            <div class="card">
-                <div class="">
-                    <a href="{% url 'profile' username=user.username %}" class="username">{{ user.username }} </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+<table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Аватар</th>
+                <th>Логин</th>
+                <th>Адрес</th>
+                <th>Телефон</th>
+                <th>Статус</th>
+                <th>Специализации</th>
+                <th>Разрешения</th>
+                <th>Соцсети</th>
+                <th>Мессенджеры</th>
+                <th>Сообщения</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in customuser_list %}
+                <tr>
+                    <td><a href="{% url 'profile' username=user.username %}" class="username">{{ user.id }} </a></td>
+                    <td><a href="{% url 'profile' username=user.username %}" class="username"><img src="{% if user.image %}{{ user.image.url }}{% endif %}" alt="Нет фото"></a> </td>
+                    <td><a href="{% url 'profile' username=user.username %}" class="username">{{ user.username }} </a> </td>
+                    <td><a href="{% url 'profile' username=user.username %}" class="username">{{ user.address.city }} </a> </td>
+                    <td><a href="{% url 'profile' username=user.username %}" class="username">{{ user.user_contacts.phone }} </a> </td>
+                    <td>{{ user.status }}</td>
+                    <td>
+                        <ul>
+                            {% for spec in user.specialisation.all %}
+                                <li>{{ spec.specialisation }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for allow in user.allow.all %}
+                                <li>{{ allow.allow }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for social in user.social_list.all %}
+                                <li>{{ social.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for messenger in user.user_contacts.messenger.all %}
+                                <li>{{ messenger.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+<!--                        <a id="sender_{{user.id}}" href="{% url 'profile' username=user.username %}" class="username">0</a>-->
+                        <form id="new_img_form"
+                            action="{% url 'message' recipient=user.username username=request.user.username %}" method="POST"
+                              enctype="multipart/form-data" style="display: flex">
+                            {% csrf_token %}
+                            <input type="hidden" name="receiver_id" value="{{ user.id }}">
+                            <button id="sender_{{user.id}}" class="userlinks" type="submit" name="edit_btn" value="new_image">Написать</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
+
+
+
+
+
+<script src="{% static '' %}{{ page_style }}/js/script.js"></script>
 
 {% endblock content %}
 </main>

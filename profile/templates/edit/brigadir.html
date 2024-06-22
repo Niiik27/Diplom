@@ -2,7 +2,6 @@
 {% block content %}
 {% load static %}
 <main class="main">
-
     <form  id="userForm" class="user-data" action="{% url 'edit' username=request.user.username %}" method="POST">
         {% csrf_token %}
         <section class = "base-info">

@@ -3,7 +3,8 @@ const notifySocket = new WebSocket('ws://127.0.0.1:8002/ws/notify/');
 
 notifySocket.onopen = function () {
     console.log('notifySocket connection established.');
-    // requestTotalNotify();
+        const event = new CustomEvent('websocketOpen');
+    document.dispatchEvent(event);
 };
 notifySocket.onclose = function () {
     console.log('notifySocket connection closed.');
@@ -39,9 +40,13 @@ notifySocket.onmessage = function (event) {
         console.log('Бригада укомплектована', data.num);
         teamComplete(data.num);
     }
+    else if (data.type === 'set_unread_nums_by_sender') {
+        console.log('Уведомление о количестве непрочитанных по пользователям', data.num);
+        addNewUnreadNumByUsers(data.unread_nums_by_sender);
+    }
 
 };
-
+window.socket = notifySocket;
 // function requestTotalNotify() {
 //     notifySocket.send(JSON.stringify({'type': 'total'}));
 // }
@@ -88,7 +93,7 @@ function teamComplete(count) {
     {
         usersContainer.textContent = "Бригада укомплектована"
     }
-    else
+    else if(usersContainer)
     {
         usersContainer.textContent = `О бригаде ${count}`
     }

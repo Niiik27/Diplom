@@ -266,23 +266,10 @@ class UserUpdateView(UpdateView):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
         print(user.status)
-        if user.status:
-            match user.status.name:
-                case 'Заказ':
-                    form = EditCustomerForm(instance=user)
-                    context = {'form': form}
-                    self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/customer.html'
-                case 'Прораб':
-                    form = EditProrabForm(instance=user)
-                    context = {'form': form}
-                case _:
-                    form = EditUserForm(instance=user)
-                    context = {'form': form}
-                    self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
-        else:
-            form = EditUserForm(instance=user)
-            context = {'form': form}
-            self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
+
+        form = EditUserForm(instance=user)
+        context = {'form': form}
+        self.template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
 
         form.fields.pop('password1')
         form.fields.pop('password2')
@@ -452,5 +439,119 @@ class CustomUserListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if self.request.user.status.name == 'Заказ':#Нужно для ... возможно уже не нужно
+            order = Order.objects.get(customer=self.request.user)
+            if order is not None:
+                context['order_master'] = order.master
         context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
         return context
+class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
+    model = CustomUser
+    template_name = f'{APP_NAMES.USERS[APP_NAMES.NAME]}/edit_users.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.status.name == 'Заказ':
+            order = Order.objects.get(customer=self.request.user)
+            if order is not None:
+                context['order_master'] = order.master
+        users = CustomUser.objects.all()
+        # context = {'users': []}
+        context['customuser_list'] = {}
+
+        for user in users:
+            user_data = {}
+            context['customuser_list'][user.id]=user_data
+            user_data['image'] = user.image
+            user_data['photo_url'] = user.photo_url
+
+            user_data['login'] = user.username
+
+            address_res = {}
+            city_list = City.objects.all()
+            ci_res = {}
+            for i in range(city_list.count()):
+                city_item = city_list[i]
+                ci_res[city_item.name] = city_item == user.address.city
+            address_res['city'] = ci_res
+
+
+
+            # address_res['Город'] =  user.address.city.name
+            address_res['Район'] =  user.address.district
+            address_res['Улица'] =  user.address.street
+            address_res['Номер дома'] =  user.address.house_number
+            address_res['Квартира'] =  user.address.apartment
+            address_res['Индекс'] =  user.address.postal_code
+
+            user_data['address_list'] = address_res
+
+
+            status_list = Status.objects.all()
+            stat_res = {}
+            for i in range(status_list.count()):
+                status_item = status_list[i]
+                stat_res[status_item.name] = status_item == user.status
+            user_data['status_list'] = stat_res
+
+
+            user_social_profiles = UserSocial.objects.filter(user=user)
+            social_list = SocialList.objects.all()
+            sl_res = {}
+
+            for i in range(len(social_list)):
+                social_name = social_list[i].name
+                social_ico = social_list[i].icon_path
+                sl_res[social_name] = social_ico, ""
+                for j in range(len(user_social_profiles)):
+                    profile = user_social_profiles[j]
+                    if len(profile.link) > 0:
+                        if profile.social_id == i + 1:
+                            sl_res[social_name] = social_ico, profile.link
+                            break
+            user_data['social_list'] = sl_res
+
+            contacts = Contacts.objects.get(user=user)
+            user_data['phone_number'] = contacts.phone
+            messenger_list = MessengerList.objects.all()
+            mes_res = {}
+            for messenger in messenger_list:
+                messenger_name = messenger.name
+                messenger_ico = messenger.icon_path
+                mes_res[messenger.id] = [messenger_name, messenger_ico, messenger in contacts.messenger.all()]
+
+            user_data['messenger_list'] = mes_res
+
+            spec_list = Specialisations.objects.all()
+            sp_res = {}
+            for spec in spec_list:
+                sp_res[spec.id] = [spec.specialisation, spec in user.specialisation.all()]
+
+            user_data['spec_list'] = sp_res
+
+
+            allow_list = Allowance.objects.all()
+            al_res = {}
+            for allow in allow_list:
+                al_res[allow.id] = [allow.allow,allow in user.allow.all()]
+
+            user_data['allow_list'] = al_res
+
+        context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
+        return context
+
+
+
+
+class CustomUserListSave(UpdateView):  # (ListView):#
+    model = CustomUser
+    template_name = f'{APP_NAMES.USERS[APP_NAMES.NAME]}/edit_users.html'
+    def get_success_url(self):
+        return reverse_lazy(APP_NAMES.PROFILE[APP_NAMES.NAME], kwargs={'username': self.request.user.username})
+    def post(self, request, *args, **kwargs):
+        print('Получил пост запрос на сохранение',request.POST)
+        # return redirect(self.get_success_url())
+
+        return JsonResponse({'success': True})
+        # else:
+        #     return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)

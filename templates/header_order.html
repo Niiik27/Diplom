@@ -1,26 +1,15 @@
-<header class="header">
-    {% load static %}
-    <div class="container">
-        <div class="avatar">
-            {% if user.is_authenticated == False %}
-                <a href="{% url 'home' %}" class="username">Главная</a>
-            {% else %}
-                {% include "header_avatar.html" %}
-                {% if page_style != 'team_view' %}
-                    {% if order_master.username %}
-                        <a href="{% url 'team_view' order_master.username %}" id="team-complete">Бригада</a>
-                    {% endif %}
+<div class="container">
+    <div class="avatar">
+        {% if request.user.is_authenticated == False %}
+            <a href="{% url 'home' %}" class="username">Главная</a>
+        {% else %}
+            {# if page_style != 'team_view' #}
+                {% if order_master.username %}
+                    <a href="{% url 'team_view' order_master.username %}" id="team-complete">Бригада</a>
                 {% endif %}
-
-            {% endif %}
-        </div>
-        {% include "header_admin.html" %}
+            {# endif #}
+        {% endif %}
     </div>
-    <div>{{ page_style }}</div>
+</div>
 
-    {% if user.is_authenticated %}
 
-        <script src="{% static 'base/js/script.js' %}"></script>
-
-    {% endif %}
-</header>

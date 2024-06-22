@@ -1,12 +1,11 @@
-    <a href="{% url 'profile' username=user.username %}" class="username">{{ request.user.username }} </a>
-    {% if page_style == 'edit' %}
-        <a id="saveLink" href="#" class="" type="button">Сохранить</a>
-    {% else %}
-        {% if page_style != 'teams' %}
-            <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>
-            {% if request.user.status.name != 'Заказ' %}
-                <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>
-            {% endif %}
+<a href="{% url 'profile' username=user.username %}" class="username">{{ request.user.username }} </a>
+{% if page_style == 'edit' %}
+    <a id="saveLink" href="#" class="" type="button">Сохранить</a>
+{% else %}
+    {% if page_style != 'teams' %}
+        <a href="{% url 'profile' username=user.username %}edit" class="" type="button">Редактировать</a>
+        {% if request.user.status.name != 'Заказ' %}
+            <a href="{% url 'portfolio' username=user.username %}">Портфолио</a>
         {% endif %}
     {% endif %}
-
+{% endif %}
