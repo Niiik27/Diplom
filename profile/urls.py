@@ -16,8 +16,9 @@ urlpatterns = [
     path(f'{APP_NAMES.LOGOUT[APP_NAMES.NAME]}/', my_logout_view, name=APP_NAMES.LOGOUT[APP_NAMES.NAME]),
     path(f'{APP_NAMES.USERS[APP_NAMES.NAME]}/', views.CustomUserListView.as_view(), name=APP_NAMES.USERS[APP_NAMES.NAME]),
     path(f'{APP_NAMES.USERS_EDIT[APP_NAMES.NAME]}/', views.CustomUserListEdit.as_view(), name=APP_NAMES.USERS_EDIT[APP_NAMES.NAME]),
-    path(f'{APP_NAMES.USERS_SAVE[APP_NAMES.NAME]}/<int:user_id>/', views.CustomUserListSave.as_view(), name=APP_NAMES.USERS_SAVE[APP_NAMES.NAME]),
+    # path(f'{APP_NAMES.USERS_SAVE[APP_NAMES.NAME]}/<int:user_id>/', views.CustomUserListSave.as_view(), name=APP_NAMES.USERS_SAVE[APP_NAMES.NAME]),
     path('<str:username>/', views.ProfileView.as_view(), name=APP_NAMES.PROFILE[APP_NAMES.NAME]),
     path(f'<str:username>/{APP_NAMES.EDIT[APP_NAMES.NAME]}/', views.UserUpdateView.as_view(), name=APP_NAMES.EDIT[APP_NAMES.NAME]),
+    path('save_user/<int:user_id>/', views.save_user, name='save_user'),
 ]
 

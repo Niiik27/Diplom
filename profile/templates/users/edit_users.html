@@ -2,7 +2,10 @@
 {% block content %}
 {% load static %}
 <main>
-Отредактируем любого пользователя
+
+
+
+<h1>Отредактируем любого пользователя</h1>
 <table id="teamTable">
     <colgroup>
         <col style="width: 10px;">
@@ -15,7 +18,6 @@
         <col style="width: 100px;">
         <col style="width: 50px;">
         <col style="width: 150px;">
-<!--        <col style="width: 100px;">-->
         <col style="width: 50px;">
     </colgroup>
     <thead>
@@ -30,57 +32,52 @@
             <th>Разрешения</th>
             <th>Соцсети</th>
             <th>Мессенджеры</th>
-<!--            <th>Сообщения</th>-->
             <th>Сохранить</th>
-
         </tr>
     </thead>
     <tbody>
         {% for user_id, user_data in customuser_list.items %}
-            <tr id = "row_{{ user_id }}">
-                <td data-column-name="user_id"><a href="{% url 'profile' username=user_data.login %}" class="username">{{ user_id }} </a></td>
+            <tr id="row_{{ user_id }}">
+                <td data-column-name="user_id">
+                    <a href="{% url 'profile' username=user_data.login %}" class="username">{{ user_id }}</a>
+                </td>
                 <td>
-                    <a href="{% url 'profile' username=user_data.login %}" class="username"><img src="{% if user_data.image %}{{ user_data.image.url }}{% endif %}" alt="Нет фото"  height="50px"></a>
-                    <input id="img_{{user_id}}"  type="url" name="photo_url" value="{{user_data.photo_url}}" class="form-input" placeholder="Ссылка на фото" {{user_data.photo_url}}>
+                    <a href="{% url 'profile' username=user_data.login %}" class="username">
+                        <img src="{% if user_data.image %}{{ user_data.image.url }}{% endif %}" alt="Нет фото" height="50px">
+                    </a>
+                    <input id="img_{{user_id}}" type="url" name="photo_url" value="{{user_data.photo_url}}" class="form-input" placeholder="Ссылка на фото">
                 </td>
                 <td data-column-name="login">
-                    <input id="login_{{user_id}}"  type="text" name="login" value="{{user_data.login}}" class="form-input" placeholder="Логин" {{user_data.login}}>
+                    <input id="login_{{user_id}}" type="text" name="login" value="{{user_data.login}}" class="form-input" placeholder="Логин">
                 </td>
                 <td data-column-name="address">
                     <div class="select-wrapper">
-                    <div class="select-header">Адрес
-<!--                        {% for key in user_data.address_list.city.keys %}-->
-<!--                            {% if forloop.first %}-->
-<!--                                {{ key }}-->
-<!--                            {% endif %}-->
-<!--                        {% endfor %}-->
-                    </div>
+                        <div class="select-header">Адрес</div>
                         <ul class="select-options">
                             {% for key, value in user_data.address_list.items %}
-                                <li class = "dropdown-item">
-                                    {% if forloop.counter > 1 %}
-                                        <input id="address_{{user_id}}"  type="text" name="{{ key }}" value="{{ value }}" class="form-input" placeholder="{{ key }}" {{ value }}>
-                                    {%else%}
-                                        <select class="select-header">
-                                            {% for key,value in user_data.address_list.city.items %}
-                                                <option class = "dropdown-item" value="{{ forloop.counter }}" {% if value %}selected{% endif %}>{{ key }}</option>
+                                <li class="dropdown-item">
+                                    {% if key == 'city' %}
+                                        <select id="address_{{user_id}}_{{ key }}" name="{{ key }}" class="form-input select-header">
+                                            {% for city_key, city_value in value.items %}
+                                                <option value="{{ city_key }}" {% if city_value %}selected{% endif %}>{{ city_key }}</option>
                                             {% endfor %}
                                         </select>
-                                    {%endif%}
+                                    {% else %}
+                                        <input id="address_{{user_id}}_{{ key }}" type="text" name="{{ key }}" value="{{ value }}" class="form-input" placeholder="{{ key }}">
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
                     </div>
                 </td>
+
                 <td data-column-name="phone">
-                    <input id="phone_{{user_id}}"  type="tel" name="phone" value="{{user_data.phone_number}}" class="form-input" placeholder="Введите номер телефона" {{user_data.phone_number}}>
+                    <input id="phone_{{user_id}}" type="tel" name="phone" value="{{user_data.phone_number}}" class="form-input" placeholder="Введите номер телефона">
                 </td>
-                <td data-column-name="status" class="select-wrapper">
-                    <select class="select-header">
-                        {% for key,value in user_data.status_list.items %}
-                            <option class = "dropdown-item" >
-                                <div value="{{ forloop.counter }}" {% if value %}selected{% endif %} class="form-input">{{ key }}</div>
-                            </option>
+                <td data-column-name="status">
+                    <select id="status_{{user_id}}" class="form-input">
+                        {% for key, value in user_data.status_list.items %}
+                            <option value="{{ key }}" {% if value %}selected{% endif %}>{{ key }}</option>
                         {% endfor %}
                     </select>
                 </td>
@@ -89,8 +86,8 @@
                         <div class="select-header">Специализация</div>
                         <ul class="select-options">
                             {% for key, value in user_data.spec_list.items %}
-                                <li class = "dropdown-item">
-                                    <input id="spec_{{user_id}}_{{ key }}"  type="checkbox" name="spec" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>
+                                <li class="dropdown-item">
+                                    <input id="spec_{{user_id}}_{{ key }}" type="checkbox" name="spec" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>
                                     <label for="spec_{{user_id}}_{{ key }}">{{value.0}}</label>
                                 </li>
                             {% endfor %}
@@ -102,8 +99,8 @@
                         <div class="select-header">Разрешения</div>
                         <ul class="select-options">
                             {% for key, value in user_data.allow_list.items %}
-                                <li class = "dropdown-item">
-                                    <input id="allow_{{user_id}}_{{ key }}"  type="checkbox" name="allow" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>
+                                <li class="dropdown-item">
+                                    <input id="allow_{{user_id}}_{{ key }}" type="checkbox" name="allow" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>
                                     <label for="allow_{{user_id}}_{{ key }}">{{value.0}}</label>
                                 </li>
                             {% endfor %}
@@ -115,7 +112,7 @@
                         <div class="select-header">Соцсети</div>
                         <ul class="select-options">
                             {% for key, value in user_data.social_list.items %}
-                                <li class = "dropdown-item">
+                                <li class="dropdown-item">
                                     <img src="{% static value.0 %}" alt="{{key}}" class="user-social-ico" width="50px" height="50px">
                                     <input type="text" name="social_link" value="{{ value.1 }}" placeholder="{{ key }}" class="form-input">
                                 </li>
@@ -125,12 +122,12 @@
                 </td>
                 <td data-column-name="messengers">
                     <div class="select-wrapper">
-                    <div class="select-header">Мессенджеры</div>
+                        <div class="select-header">Мессенджеры</div>
                         <ul class="select-options">
                             {% for key, value in user_data.messenger_list.items %}
-                                <li class = "dropdown-item">
+                                <li class="dropdown-item">
                                     <img src="{% static value.1 %}" alt="{{value.0}}" class="user-social-ico" width="50px" height="50px">
-                                    <input id="messenger_{{user_id}}_{{ key }}"  type="checkbox" name="messenger" value="{{ key }}" class="form-input"{% if value.2 %}checked{% endif %}>
+                                    <input id="messenger_{{user_id}}_{{ key }}" type="checkbox" name="messenger" value="{{ key }}" class="form-input" {% if value.2 %}checked{% endif %}>
                                     <label for="messenger_{{user_id}}_{{ key }}">{{value.0}}</label>
                                 </li>
                             {% endfor %}
@@ -138,18 +135,181 @@
                     </div>
                 </td>
                 <td data-column-name="save">
-                    <form id="save-selected-user"
-                        action="{% url 'save_user' user_id=user_id %}" method="POST"
-                          enctype="multipart/form-data" style="display: flex">
-                        {% csrf_token %}
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                        <button id="saver_{{user.id}}" class="userlinks" type="submit" name="save_btn" value="save-user-data">Сохранить</button>
-                    </form>
+                    <button class="save-btn" data-user-id="{{ user_id }}">Сохранить</button>
                 </td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--Отредактируем любого пользователя-->
+<!--<table id="teamTable">-->
+<!--    <colgroup>-->
+<!--        <col style="width: 10px;">-->
+<!--        <col style="width: 50px;">-->
+<!--        <col style="width: 50px;">-->
+<!--        <col style="width: 50px;">-->
+<!--        <col style="width: 15px;">-->
+<!--        <col style="width: 100px;">-->
+<!--        <col style="width: 50px;">-->
+<!--        <col style="width: 100px;">-->
+<!--        <col style="width: 50px;">-->
+<!--        <col style="width: 150px;">-->
+<!--&lt;!&ndash;        <col style="width: 100px;">&ndash;&gt;-->
+<!--        <col style="width: 50px;">-->
+<!--    </colgroup>-->
+<!--    <thead>-->
+<!--        <tr>-->
+<!--            <th>ID</th>-->
+<!--            <th>Аватар</th>-->
+<!--            <th>Логин</th>-->
+<!--            <th>Адрес</th>-->
+<!--            <th>Телефон</th>-->
+<!--            <th>Статус</th>-->
+<!--            <th>Специализации</th>-->
+<!--            <th>Разрешения</th>-->
+<!--            <th>Соцсети</th>-->
+<!--            <th>Мессенджеры</th>-->
+<!--&lt;!&ndash;            <th>Сообщения</th>&ndash;&gt;-->
+<!--            <th>Сохранить</th>-->
+
+<!--        </tr>-->
+<!--    </thead>-->
+<!--    <tbody>-->
+<!--        {% for user_id, user_data in customuser_list.items %}-->
+<!--            <tr id = "row_{{ user_id }}">-->
+<!--                <td data-column-name="user_id"><a href="{% url 'profile' username=user_data.login %}" class="username">{{ user_id }} </a></td>-->
+<!--                <td>-->
+<!--                    <a href="{% url 'profile' username=user_data.login %}" class="username"><img src="{% if user_data.image %}{{ user_data.image.url }}{% endif %}" alt="Нет фото"  height="50px"></a>-->
+<!--                    <input id="img_{{user_id}}"  type="url" name="photo_url" value="{{user_data.photo_url}}" class="form-input" placeholder="Ссылка на фото" {{user_data.photo_url}}>-->
+<!--                </td>-->
+<!--                <td data-column-name="login">-->
+<!--                    <input id="login_{{user_id}}"  type="text" name="login" value="{{user_data.login}}" class="form-input" placeholder="Логин" {{user_data.login}}>-->
+<!--                </td>-->
+<!--                <td data-column-name="address">-->
+<!--                    <div class="select-wrapper">-->
+<!--                    <div class="select-header">Адрес-->
+<!--&lt;!&ndash;                        {% for key in user_data.address_list.city.keys %}&ndash;&gt;-->
+<!--&lt;!&ndash;                            {% if forloop.first %}&ndash;&gt;-->
+<!--&lt;!&ndash;                                {{ key }}&ndash;&gt;-->
+<!--&lt;!&ndash;                            {% endif %}&ndash;&gt;-->
+<!--&lt;!&ndash;                        {% endfor %}&ndash;&gt;-->
+<!--                    </div>-->
+<!--                        <ul class="select-options">-->
+<!--                            {% for key, value in user_data.address_list.items %}-->
+<!--                                <li class = "dropdown-item">-->
+<!--                                    {% if forloop.counter > 1 %}-->
+<!--                                        <input id="address_{{user_id}}"  type="text" name="{{ key }}" value="{{ value }}" class="form-input" placeholder="{{ key }}" {{ value }}>-->
+<!--                                    {%else%}-->
+<!--                                        <select class="select-header">-->
+<!--                                            {% for key,value in user_data.address_list.city.items %}-->
+<!--                                                <option class = "dropdown-item" value="{{ forloop.counter }}" {% if value %}selected{% endif %}>{{ key }}</option>-->
+<!--                                            {% endfor %}-->
+<!--                                        </select>-->
+<!--                                    {%endif%}-->
+<!--                                </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </td>-->
+<!--                <td data-column-name="phone">-->
+<!--                    <input id="phone_{{user_id}}"  type="tel" name="phone" value="{{user_data.phone_number}}" class="form-input" placeholder="Введите номер телефона" {{user_data.phone_number}}>-->
+<!--                </td>-->
+<!--                <td data-column-name="status" class="select-wrapper">-->
+<!--                    <select class="select-header">-->
+<!--                        {% for key,value in user_data.status_list.items %}-->
+<!--                            <option class = "dropdown-item" >-->
+<!--                                <div value="{{ forloop.counter }}" {% if value %}selected{% endif %} class="form-input">{{ key }}</div>-->
+<!--                            </option>-->
+<!--                        {% endfor %}-->
+<!--                    </select>-->
+<!--                </td>-->
+<!--                <td>-->
+<!--                    <div class="select-wrapper">-->
+<!--                        <div class="select-header">Специализация</div>-->
+<!--                        <ul class="select-options">-->
+<!--                            {% for key, value in user_data.spec_list.items %}-->
+<!--                                <li class = "dropdown-item">-->
+<!--                                    <input id="spec_{{user_id}}_{{ key }}"  type="checkbox" name="spec" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>-->
+<!--                                    <label for="spec_{{user_id}}_{{ key }}">{{value.0}}</label>-->
+<!--                                </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </td>-->
+<!--                <td>-->
+<!--                    <div class="select-wrapper">-->
+<!--                        <div class="select-header">Разрешения</div>-->
+<!--                        <ul class="select-options">-->
+<!--                            {% for key, value in user_data.allow_list.items %}-->
+<!--                                <li class = "dropdown-item">-->
+<!--                                    <input id="allow_{{user_id}}_{{ key }}"  type="checkbox" name="allow" value="{{ key }}" class="form-input" {% if value.1 %}checked{% endif %}>-->
+<!--                                    <label for="allow_{{user_id}}_{{ key }}">{{value.0}}</label>-->
+<!--                                </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </td>-->
+<!--                <td data-column-name="allowances">-->
+<!--                    <div class="select-wrapper">-->
+<!--                        <div class="select-header">Соцсети</div>-->
+<!--                        <ul class="select-options">-->
+<!--                            {% for key, value in user_data.social_list.items %}-->
+<!--                                <li class = "dropdown-item">-->
+<!--                                    <img src="{% static value.0 %}" alt="{{key}}" class="user-social-ico" width="50px" height="50px">-->
+<!--                                    <input type="text" name="social_link" value="{{ value.1 }}" placeholder="{{ key }}" class="form-input">-->
+<!--                                </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </td>-->
+<!--                <td data-column-name="messengers">-->
+<!--                    <div class="select-wrapper">-->
+<!--                    <div class="select-header">Мессенджеры</div>-->
+<!--                        <ul class="select-options">-->
+<!--                            {% for key, value in user_data.messenger_list.items %}-->
+<!--                                <li class = "dropdown-item">-->
+<!--                                    <img src="{% static value.1 %}" alt="{{value.0}}" class="user-social-ico" width="50px" height="50px">-->
+<!--                                    <input id="messenger_{{user_id}}_{{ key }}"  type="checkbox" name="messenger" value="{{ key }}" class="form-input"{% if value.2 %}checked{% endif %}>-->
+<!--                                    <label for="messenger_{{user_id}}_{{ key }}">{{value.0}}</label>-->
+<!--                                </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </div>-->
+<!--                </td>-->
+<!--                <td data-column-name="save">-->
+<!--                    <form id="save-selected-user"-->
+<!--                        action="{% url 'save_user' user_id=user_id %}" method="POST"-->
+<!--                          enctype="multipart/form-data" style="display: flex">-->
+<!--                        {% csrf_token %}-->
+<!--                        <input type="hidden" name="user_id" value="{{ user.id }}">-->
+<!--                        <button id="saver_{{user.id}}" class="userlinks" type="submit" name="save_btn" value="save-user-data">Сохранить</button>-->
+<!--                    </form>-->
+<!--                </td>-->
+<!--            </tr>-->
+<!--        {% endfor %}-->
+<!--    </tbody>-->
+<!--</table>-->
 
 <script src="{% static '' %}{{ page_style }}/js/edit_users.js"></script>
 {% endblock content %}

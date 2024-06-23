@@ -8,6 +8,7 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, UpdateView, TemplateView, ListView, DeleteView, DetailView, View
 import requests
 from django.core.files.base import ContentFile
@@ -20,6 +21,51 @@ from .models import CustomUser
 
 app_name = APP_NAMES.PROFILE[APP_NAMES.NAME]
 verbose_name = APP_NAMES.PROFILE[APP_NAMES.VERBOSE]
+
+
+def take_image_from_url(url):
+    photo_url = url[0]
+    if photo_url:
+        response = requests.get(photo_url)
+        if response.status_code == 200:
+            img_data = BytesIO(response.content)
+            img = Image.open(img_data)
+
+            new_size = (300, 300)
+            img.thumbnail(new_size)
+
+            pathURL = photo_url.split("?")[0]
+            imgExt = pathURL[pathURL.rfind('.') + 1:len(pathURL)]
+            if imgExt.lower() == 'jpg':
+                imgExt = 'jpeg'
+            filename = pathURL.split('/')[-1]
+
+            # Преобразуем изображение в байты
+            buffer = BytesIO()
+            img.save(buffer, format=imgExt)
+            image_file = ContentFile(buffer.getvalue(), name=filename)
+
+            # Сохраняем изображение в поле ImageField
+            # self.image.save(filename, image_file)
+            return image_file
+        return None
+    return None
+
+
+def is_social_profile(link, social_id):
+    start_link = 'https://'
+    if link.startswith(start_link):
+        dot_pos = link.index('.')
+        base_link = link[len(start_link):]
+        base_name = link[len(start_link):dot_pos]
+        dot_pos = base_link.index('.') + 1
+        domain = base_link[dot_pos:base_link.index('/')]
+
+        social = SocialList.objects.get(pk=social_id)
+        social_dict = json.loads(social.template_string)
+        return base_name in social_dict['domain_names'] and domain in social_dict['domains']
+
+        # return(base_name==templates[0] and domain==templates[1])
 
 
 class ProfileView(LoginRequiredMixin, DetailView):
@@ -47,7 +93,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
                     return self.regular_profile(context)
         else:
             return self.regular_profile(context)
-
 
     def customer_profile(self, context):
         user = self.request.user
@@ -204,34 +249,6 @@ class UserUpdateView(UpdateView):
     form_class = EditUserForm
     template_name = f'{APP_NAMES.EDIT[APP_NAMES.NAME]}/regular.html'
 
-    def take_image_from_url(self, url):
-        photo_url = url[0]
-        if photo_url:
-            response = requests.get(photo_url)
-            if response.status_code == 200:
-                img_data = BytesIO(response.content)
-                img = Image.open(img_data)
-
-                new_size = (300, 300)
-                img.thumbnail(new_size)
-
-                pathURL = photo_url.split("?")[0]
-                imgExt = pathURL[pathURL.rfind('.') + 1:len(pathURL)]
-                if imgExt.lower() == 'jpg':
-                    imgExt = 'jpeg'
-                filename = pathURL.split('/')[-1]
-
-                # Преобразуем изображение в байты
-                buffer = BytesIO()
-                img.save(buffer, format=imgExt)
-                image_file = ContentFile(buffer.getvalue(), name=filename)
-
-                # Сохраняем изображение в поле ImageField
-                # self.image.save(filename, image_file)
-                return image_file
-            return None
-        return None
-
     def get(self, request, *args, **kwargs):
         user_id = self.request.user.pk
         user = get_object_or_404(CustomUser, pk=user_id)
@@ -297,6 +314,7 @@ class UserUpdateView(UpdateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        print(request.POST)
         user = self.request.user
         # user_id = user.pk
         # user = get_object_or_404(CustomUser, pk=user_id)
@@ -305,8 +323,9 @@ class UserUpdateView(UpdateView):
         # password2 = request.POST['password2']
         # if password1 == password2:
         photo_url = (request.POST['photo_url']),
+        image = None
         if photo_url:
-            image = self.take_image_from_url(photo_url)
+            image = take_image_from_url(photo_url)
         username = request.POST['username']
         first_name = request.POST['first_name']
         last_name = request.POST.get('last_name')
@@ -371,7 +390,7 @@ class UserUpdateView(UpdateView):
         for i in range(len(social_link)):
             link = social_link[i]
             if link:
-                if (self.is_social_profile(link, i + 1)):
+                if is_social_profile(link, i + 1):
                     try:
                         user_social = UserSocial.objects.get(user=user, social_id=i + 1)
                         user_social.link = link
@@ -406,22 +425,6 @@ class UserUpdateView(UpdateView):
     def get_success_url(self):
         return reverse_lazy(APP_NAMES.PROFILE[APP_NAMES.NAME], kwargs={'username': self.request.user.username})
 
-    def is_social_profile(self, link, social_id):
-
-        start_link = 'https://'
-        if link.startswith(start_link):
-            dot_pos = link.index('.')
-            base_link = link[len(start_link):]
-            base_name = link[len(start_link):dot_pos]
-            dot_pos = base_link.index('.') + 1
-            domain = base_link[dot_pos:base_link.index('/')]
-
-            social = SocialList.objects.get(pk=social_id)
-            social_dict = json.loads(social.template_string)
-            return base_name in social_dict['domain_names'] and domain in social_dict['domains']
-
-            # return(base_name==templates[0] and domain==templates[1])
-
     def get_total_orders(self, me):
         new_orders = Order.objects.filter(confirmed=False)
         customer_ids = []
@@ -439,13 +442,15 @@ class CustomUserListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.request.user.status.name == 'Заказ':#Нужно для ... возможно уже не нужно
+        if self.request.user.status.name == 'Заказ':  # Нужно для ... возможно уже не нужно
             order = Order.objects.get(customer=self.request.user)
             if order is not None:
                 context['order_master'] = order.master
         context['page_style'] = APP_NAMES.USERS[APP_NAMES.NAME]
         return context
-class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
+
+
+class CustomUserListEdit(LoginRequiredMixin, TemplateView):  # (ListView):#
     model = CustomUser
     template_name = f'{APP_NAMES.USERS[APP_NAMES.NAME]}/edit_users.html'
 
@@ -461,7 +466,7 @@ class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
 
         for user in users:
             user_data = {}
-            context['customuser_list'][user.id]=user_data
+            context['customuser_list'][user.id] = user_data
             user_data['image'] = user.image
             user_data['photo_url'] = user.photo_url
 
@@ -475,17 +480,14 @@ class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
                 ci_res[city_item.name] = city_item == user.address.city
             address_res['city'] = ci_res
 
-
-
             # address_res['Город'] =  user.address.city.name
-            address_res['Район'] =  user.address.district
-            address_res['Улица'] =  user.address.street
-            address_res['Номер дома'] =  user.address.house_number
-            address_res['Квартира'] =  user.address.apartment
-            address_res['Индекс'] =  user.address.postal_code
+            address_res['Район'] = user.address.district
+            address_res['Улица'] = user.address.street
+            address_res['Номер дома'] = user.address.house_number
+            address_res['Квартира'] = user.address.apartment
+            address_res['Индекс'] = user.address.postal_code
 
             user_data['address_list'] = address_res
-
 
             status_list = Status.objects.all()
             stat_res = {}
@@ -493,7 +495,6 @@ class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
                 status_item = status_list[i]
                 stat_res[status_item.name] = status_item == user.status
             user_data['status_list'] = stat_res
-
 
             user_social_profiles = UserSocial.objects.filter(user=user)
             social_list = SocialList.objects.all()
@@ -529,11 +530,10 @@ class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
 
             user_data['spec_list'] = sp_res
 
-
             allow_list = Allowance.objects.all()
             al_res = {}
             for allow in allow_list:
-                al_res[allow.id] = [allow.allow,allow in user.allow.all()]
+                al_res[allow.id] = [allow.allow, allow in user.allow.all()]
 
             user_data['allow_list'] = al_res
 
@@ -541,15 +541,170 @@ class CustomUserListEdit(LoginRequiredMixin, TemplateView):#(ListView):#
         return context
 
 
+@csrf_exempt
+def save_user(request, user_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user = get_object_or_404(CustomUser, pk=user_id)
+            photo_url = data['photo_url'],
+            image = None
+
+            {'csrfmiddlewaretoken': ['LDHQewS5Raqd6ZN7r42kr4qNDvFVUIKynl5SqU25ANFWbr0Yid8iKM2wkEqE2InN'],
+             'username': ['django'], 'photo_url': [
+                'https://sun9-44.userapi.com/impf/7XxHnsMPsNDK6Br7u655OpyRoFcs-seeTSK55w/-xTYPRrNFSs.jpg?size=541x373&quality=96&sign=f2e0a9eff211bbdbda93a3694e7166df&type=album'],
+             'first_name': ['Николай'], 'last_name': ['Меньшиков'], 'email': ['admin@example.com'],
+             'birth': ['1980-10-27'], 'specialisation': ['1', '2', '4', '5', '6'], 'allow': ['1', '2'], 'status': ['1'],
+             'qualify': ['3'], 'about': [
+                'Учитывая ключевые сценарии поведения, начало повседневной работы по формированию позиции требует от нас анализа прогресса профессионального сообщества. Являясь всего лишь частью общей картины, многие известные личности своевременно верифицированы. Предварительные выводы неутешительны: базовый вектор развития обеспечивает широкому кругу (специалистов) участие в формировании глубокомысленных рассуждений.'],
+             'social_link': ['', 'https://github.com/Niiik27/Diplom.git', '', '', '', '', 'https://badoo.com/feed',
+                             'https://vk.com/feed', '', 'https://inst.com/feed', 'https://ok.ru/feed'],
+             'phone': ['+75559863165'], 'messenger': ['2', '3', '4', '5'], 'city': ['1'], 'district': [''],
+             'street': ['Островского'], 'house_number': ['58'], 'apartment': ['131'], 'postal_code': ['432071']}
+
+            if photo_url:
+                image = take_image_from_url(photo_url)
+            username = data['login']
+            # first_name = data['first_name']
+            # last_name = data.get('last_name')
+            # email = data['email']
+            # birth = data['birth']
+            # about = data['about']
+            specialisation = data.get('specializations')
+
+            status = data.get('status')
+            # qualify = data['qualify']
+
+            allow = data.get('permissions')
+
+            address = data['address']
+            city = int(address['city'])+1
+            district = address['Район']
+            street = address['Улица']
+            house_number = address['Номер дома']
+            apartment = address['Квартира']
+            postal_code = address['Индекс']
+
+            phone = data['phone_number']
+            messengers = data.get('messengers')
+
+            user.username = username
+            user.photo_url = photo_url[0]
+            user.image = image
+            # user.first_name = first_name
+            # if last_name:
+            #     user.last_name = last_name
+            # user.email = email
+            # if birth:
+            #     user.birth = birth
+            if status:
+                status_obj = Status.objects.get(id=status)
+                user.status = status_obj
+            # user.about = about
+            # try:
+            #     qualify_obj = Qualify.objects.get(id=qualify)
+            #     user.qualify = qualify_obj
+            #
+            # except ValueError:
+            #     qualify_obj = 0
+            user.specialisation.clear()
+            user.specialisation.add(*specialisation)
+            user.allow.clear()
+            user.allow.add(*allow)
+
+            # social_list = [name for name in SocialList.objects.all(verbose_name)]
+            social_list = SocialList.objects.values_list('name', flat=True)
+
+            dict_socialLinks = data.get('dict_socialLinks')
+            social_links_list = data.get('social_links_list')
+            social_indexes = [index + 1 for index, link in enumerate(social_links_list) if link]
+            user.social_list.clear()
+            user.social_list.add(*social_indexes)
+            user.save()
+
+            # if user.status.name == 'Заказ':
+            #     order, created = Order.objects.get_or_create(customer=user)
+            #     ws = SOCKET("ws://127.0.0.1:8002/ws/notify/", request)
+            #     ws.connect()
+            #     ws.send_notify("", "from_server_notify_new_order")
+
+            for i in range(len(social_list)):
+                link = social_links_list[i]
+                if link:
+                    if is_social_profile(link, i + 1):
+                        try:
+                            user_social = UserSocial.objects.get(user=user, social_id=i + 1)
+                            user_social.link = link
+                            user_social.save()
+                        except UserSocial.DoesNotExist:
+                            UserSocial.objects.create(user=user, link=link, social_id=i + 1)
+                    else:
+                        try:
+                            user_social = UserSocial.objects.get(user=user, social_id=i + 1)
+                            user_social.delete()
+                        except UserSocial.DoesNotExist:
+                            pass
+
+            contact_user = Contacts.objects.get(user=user)
+            contact_user.phone = phone
+            contact_user.save()
+            # contact_user.messenger.add(*messengers)
+            selected_messengers = MessengerList.objects.filter(id__in=messengers)
+            contact_user.messenger.set(selected_messengers)
+
+            address_user = Address.objects.get(user=user)
+            if city:
+                city_obj = City.objects.get(id=city)
+                address_user.city = city_obj
+            address_user.district = district
+            address_user.street = street
+            address_user.house_number = house_number
+            if apartment:
+                address_user.apartment = apartment
+            if postal_code:
+                address_user.postal_code = postal_code
+            address_user.save()
+
+            # user.photo_url = data['photo_url']
+            # user.login = data['login']
+            # user.address = data['address']
+            # user.phone_number = data['phone_number']
+            # user.status = data['status']
+            # user.specializations = data['specializations']
+            # user.permissions = data['permissions']
+            # user.social_links = {item['key']: item['value'] for item in data['social_links']}
+            # user.messengers = data['messengers']
+            # user.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    else:
+        return JsonResponse({'success': False, 'error': 'Неправильный метод запроса'})
 
 
-class CustomUserListSave(UpdateView):  # (ListView):#
+class CustomUserListSave2(UpdateView):  # (ListView):#
     model = CustomUser
     template_name = f'{APP_NAMES.USERS[APP_NAMES.NAME]}/edit_users.html'
+
     def get_success_url(self):
         return reverse_lazy(APP_NAMES.PROFILE[APP_NAMES.NAME], kwargs={'username': self.request.user.username})
+
     def post(self, request, *args, **kwargs):
-        print('Получил пост запрос на сохранение',request.POST)
+        print('Получил пост запрос на сохранение', request.POST)
+
+        data = json.loads(request.body)
+        print(data)
+
+        # user.photo_url = data['photo_url']
+        # user.login = data['login']
+        # user.address = data['address']
+        # user.phone_number = data['phone_number']
+        # user.status = data['status']
+        # user.specializations = data['specializations']
+        # user.permissions = data['permissions']
+        # user.social_links = {item['key']: item['value'] for item in data['social_links']}
+        # user.messengers = data['messengers']
+
         # return redirect(self.get_success_url())
 
         return JsonResponse({'success': True})
