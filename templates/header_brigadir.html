@@ -3,5 +3,7 @@
 {% else %}
     {% if page_style != 'team_view' %}
         <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>
+{% else %}
+ <a href="{% url 'create_team' user.username %}" id="team-edit">Настроить бригаду</a>
     {% endif %}
 {% endif %}

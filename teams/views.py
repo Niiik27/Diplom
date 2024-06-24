@@ -184,7 +184,8 @@ class TeamsView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
         context['team_list'] = self.filter_coworker_teams(self.request.user)
-
+        print(context['team_list'])
+        return context
 
     def filter_coworker_teams(self, user, qualify=True, status=True, spec=True, allow=True, address=True):
         team_model = self.model
@@ -244,6 +245,8 @@ class TeamView(ListView):
                 return self.get_order_data(context)
             case 'Прораб':
                 return self.get_brigadir_data(context)
+            # case _:
+            #     return self.get_brigadir_data(context)
 
 
         if user.status.name == 'Прораб':
