@@ -1,10 +1,12 @@
 import json
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, View, DetailView, TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 import APP_NAMES
 from Print import Print
@@ -12,7 +14,7 @@ from _Brigada73.socket_client import SOCKET
 from orders.models import Order
 from profile.models import Status, Qualify, City, Specialisations, Allowance
 from .models import CustomUser, Team
-
+from orders.models import Order
 app_name = APP_NAMES.ORDERS[APP_NAMES.NAME]
 verbose_name = APP_NAMES.ORDERS[APP_NAMES.VERBOSE]
 
@@ -184,7 +186,6 @@ class TeamsView(ListView):
         context = super().get_context_data(**kwargs)
         context['page_style'] = APP_NAMES.TEAMS[APP_NAMES.NAME]
         context['team_list'] = self.filter_coworker_teams(self.request.user)
-        print(context['team_list'])
         return context
 
     def filter_coworker_teams(self, user, qualify=True, status=True, spec=True, allow=True, address=True):
@@ -333,3 +334,56 @@ class TeamDeleteUser(LoginRequiredMixin, TemplateView):
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'error': 'User ID is missing'}, status=400)
+
+@csrf_exempt
+def delete_team(request, username):
+    if request.method == 'POST':
+        team_id = request.POST.get('team_id')
+        order = Order.objects.get(customer=request.user)
+        if order is not None:
+
+
+            brigadir = order.master
+            if brigadir is not None:
+                status = Status.objects.get(id=brigadir.status.id - 1)
+
+                Team.objects.filter(brigadir=brigadir).delete()
+
+                brigadir.status = status
+                brigadir.save()
+                print(brigadir.status.id)
+                order.master = None
+                order.save()
+
+
+        # brigadir.status.id
+        # class Team(models.Model):
+        #     brigadir = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE,
+        #                                  related_name='team_master',
+        #                                  null=True, blank=True)
+        #     coworker = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE,
+        #                                  related_name='team_user', null=True, blank=True)
+        #     specialisation = models.ForeignKey(Specialisations, on_delete=models.DO_NOTHING,
+        #                                        verbose_name='Специализация', null=True, blank=True)
+        #     status = models.ForeignKey(Status, verbose_name='Статус', on_delete=models.DO_NOTHING, null=True,
+        #                                blank=True)
+        #     qualify = models.ForeignKey(Qualify, verbose_name="Квалификация", on_delete=models.DO_NOTHING, null=True,
+        #                                 blank=True, )
+        #     city = models.ForeignKey(City, verbose_name="Город", on_delete=models.DO_NOTHING, null=True, blank=True, )
+        #     allow = models.ManyToManyField(Allowance, verbose_name='Разрешения', blank=True)
+        #     timestamp = models.DateTimeField(verbose_name='Время', auto_now_add=True)
+
+        # class Order(models.Model):
+        #     customer = models.ForeignKey(CustomUser, verbose_name="Заказ", on_delete=models.CASCADE,
+        #                                  related_name='order_customer', null=True, blank=True)
+        #     master = models.ForeignKey(CustomUser, verbose_name="Мастер", on_delete=models.CASCADE,
+        #                                related_name='order_master', null=True, blank=True)
+        #     confirmed = models.BooleanField(verbose_name="Подтверждение сотрудничества", default=False)
+        #     has_brigade = models.BooleanField(verbose_name="Бригада укомплектована", default=False)
+        #     timestamp = models.DateTimeField(verbose_name='Время', auto_now_add=True)
+
+        print("удаляем команду",request.user.id)
+        # Логика удаления команды по имени пользователя
+        # Team.objects.filter(username=username).delete()
+        return redirect(reverse_lazy(APP_NAMES.PROFILE[APP_NAMES.NAME], kwargs={'username': request.user.username}))  # Перенаправление на список команд
+    return HttpResponse(status=405)

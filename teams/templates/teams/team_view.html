@@ -13,7 +13,10 @@
                 <th>Статус</th>
                 <th>Квалификация</th>
                 <th>Разрешения</th>
+                {% if specialisation.coworker %}
                 <th>Написать</th>
+                {% endif %}
+
             </tr>
         </thead>
         <tbody>
@@ -36,8 +39,8 @@
                             {% endfor %}
                         </ul>
                     </td>
+                    {% if specialisation.coworker %}
                     <td>
-                        {% if specialisation.coworker %}
                        <form id="new_img_form"
                             action="{% url 'message' recipient=specialisation.coworker.username username=request.user.username %}" method="POST"
                               enctype="multipart/form-data" style="display: flex">
@@ -45,13 +48,23 @@
                             <input type="hidden" name="receiver_id" value="{{ specialisation.coworker.id}}">
                             <button id="sender_{{specialisation.coworker.id}}" class="userlinks" type="submit" name="edit_btn" value="new_image">Написать</button>
                         </form>
-                        {% endif %}
                     </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 {% endif %}
+{% if user.status.name == 'Заказ' %}
+<!-- Вставьте этот код в ваш шаблон -->
+<!--<form action="{% url 'teams' %}delete_teams/{{brigadir}}" method="post">-->
+<form action="{% url 'delete_team' brigadir %}" method="post">
+
+    {% csrf_token %}
+    <button type="submit" class="userlinks">Завершить заказ</button>
+</form>
+{% endif %}
+
 </main>
 <script>
     const take_url = "{% url 'join_team' user.username %}";
