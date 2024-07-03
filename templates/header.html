@@ -3,8 +3,8 @@
     <div class="container">
         <div class="avatar">
             {% if user.is_authenticated == True %}
-<!--                {% include "header_avatar.html" %}-->
             {% if user.status.name == 'Заказ' %}
+
                 {% include "header_order.html" %}
             {% else %}
                 {% if user.status.name == 'Прораб' %}

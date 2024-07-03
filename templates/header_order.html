@@ -3,6 +3,7 @@
         {% if request.user.is_authenticated == False %}
             <a href="{% url 'home' %}" class="username">Главная</a>
         {% else %}
+        {% include "header_avatar.html" %}
             {# if page_style != 'team_view' #}
                 {% if order_master.username %}
                     <a href="{% url 'team_view' order_master.username %}" id="team-complete">Бригада</a>
