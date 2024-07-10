@@ -43,5 +43,5 @@
     const take_url = "{% url 'join_team' user.username %}";
     const token = "{{ csrf_token }}";
 </script>
-<script src = "{% static '' %}{{ page_style }}/js/script.js"></script>
+<script src = "{% static page_style %}/js/script.js"></script>
     {% endblock content%}

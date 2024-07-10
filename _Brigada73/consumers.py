@@ -242,7 +242,7 @@ class NotifyConsumer(AsyncWebsocketConsumer):
                     group_name,
                     channel_name
                 )
-                num= await self.get_num_free_specialisations_in_team_by_brigadir(self.user)
+                num = await self.get_num_free_specialisations_in_team_by_brigadir(self.user)
                 await self.send_notify_about_complete_team(group_name,num)
 
             elif user_status not in ("Мастер", "Прораб", "Заказ"):  # Все кроме этих должны узнать есть ли новые бригады
@@ -365,10 +365,24 @@ class NotifyConsumer(AsyncWebsocketConsumer):
         master = order_model.objects.get(customer=customer).master
         return master
     @database_sync_to_async
-    def get_num_free_specialisations_in_team_by_brigadir(self, brigadir):
+    def get_num_free_specialisations_in_team_by_brigadir2(self, brigadir):
         team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
         team = team_model.objects.filter(brigadir=brigadir, coworker=None)
         return team.count()
+
+    from django.db.models import Count, Case, When, Value, IntegerField
+
+    @database_sync_to_async
+    def get_num_free_specialisations_in_team_by_brigadir(self, brigadir):
+        team_model = apps.get_model(app_label=APP_NAMES.TEAMS[APP_NAMES.NAME], model_name='Team')
+        result = team_model.objects.filter(brigadir=brigadir).aggregate(
+            free_specialisations=Count('id', filter=Q(coworker=None)),
+            total_teams=Count('id')
+        )
+
+        if result['total_teams'] == 0:
+            return -1
+        return result['free_specialisations']
 
     @database_sync_to_async
     def get_brigadir_order(self, brigadir):

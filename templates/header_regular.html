@@ -4,12 +4,12 @@
             <a href="{% url 'home' %}" class="username">Главная</a>
         {% else %}
             {% include "header_avatar.html" %}
-                {% if request.user.status.name == 'Мастер' %}
-                    <a href="{% url 'orders'  %}">Заказы <span id="orders-total"></span></a>
-                {% else %}
-                    <a href="{% url 'team_list'  %}">Заказы <span id="teams-total"></span></a>
-                {% endif %}
-                <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>
+            {% if request.user.status.name == 'Мастер' %}
+                <a href="{% url 'orders'  %}">Заказы <span id="orders-total"></span></a>
+            {% else %}
+                <a href="{% url 'team_list'  %}">Вакансии <span id="teams-total"></span></a>
+            {% endif %}
+            <a href="{% url 'team_view' user.username %}" id="team-complete">Бригада</a>
         {% endif %}
     </div>
 </div>

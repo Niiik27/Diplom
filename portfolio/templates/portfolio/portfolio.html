@@ -3,14 +3,12 @@
 {% block content %}
 {% load static %}
 <main>
-
     {% if portfolio %}
     <section class="wrapper gallery">
         <div id="img_view" style="display: none">
             <!--            Это основная картинка с описанием-->
             <button class="img-btn btn-left" id="prev_btn">&#9664;</button>
             <button class="img-btn btn-right" id="next_btn">&#9654;</button>
-            <!--            <img id="main-image" src="" alt="" hidden="hidden">-->
             <div id="descriptions">
                 <div id="img_title">Название: <span>nazv</span></div>
                 <div id="img_desc">Описание: <span>opis</span></div>
@@ -25,7 +23,6 @@
         </div>
         <ul class="thumbs">
             {% for artwork in portfolio %}
-            <!--        <div class="card">-->
             <li class="thumb__block">
                 <img class="thumb__img" src="{{ artwork.thumb.url }}" alt="">
                 <span class="tmb_title">{{ artwork.title }}</span>
@@ -33,7 +30,6 @@
                 <span class="tmb_date" hidden="hidden">{{ artwork.date }}</span>
                 <span class="tmb_urls" hidden="hidden">{{ artwork.url }}</span>
                 <span class="tmb_id" hidden="hidden">{{ artwork.id }}</span>
-                <!--            <span class="thumb__txt">{{ artwork.desc|truncatechars:20 }}</span>-->
             </li>
             {% endfor %}
             <li class="thumb__blockddd">
@@ -66,13 +62,9 @@
             <div class="submits">
                 <button id="submitButton" class="button" type="submit" name="edit_btn" value="new_image">
                 </button>
-                <!--                    <button id="editButton" class="button" type="submit" name="edit_btn" value="edit_image">Изменить-->
-                <!--                    </button>-->
-                <!--                    <button id="delButton" class="button" type="submit" name="edit_btn" value="delete_image">Удалить-->
-                <!--                    </button>-->
             </div>
         </form>
     </section>
-    <script src="{% static '' %}{{ page_style }}/js/gallery.js"></script>
+    <script src="{% static page_style %}/js/gallery.js"></script>
 </main>
 {% endblock %}
